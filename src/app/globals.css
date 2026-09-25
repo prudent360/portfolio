@@ -1,0 +1,50 @@
+@import "tailwindcss";
+@plugin "@tailwindcss/typography";
+
+@theme {
+  --font-sans: var(--font-manrope), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-space-grotesk), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-jetbrains-mono), ui-monospace, SFMono-Regular, monospace;
+
+  --color-accent: #2b4acb;
+  --color-accent-dark: #1e3596;
+  --color-accent-soft: #e8ecfb;
+  --color-accent-muted: #8da2f0;
+  --color-accent-mid: #5c78e6;
+  --color-ink: #15171c;
+  --color-body: #3a3f48;
+  --color-muted: #555b66;
+  --color-page: #f5f6f8;
+  --color-panel: #f9fafc;
+  --color-line: #e2e5ea;
+  --color-edge: #dde2ea;
+  --color-edge-strong: #d5dae3;
+  --color-navy: #1b2240;
+  --color-navy-soft: #2a3563;
+  --color-orange: #d9772b;
+  --color-orange-soft: #fceee3;
+  --color-orange-ink: #b85e1a;
+  --color-peach: #f2a36b;
+}
+
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 5rem;
+}
+
+body {
+  background: var(--color-page);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
