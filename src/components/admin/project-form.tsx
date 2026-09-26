@@ -21,6 +21,7 @@ export function ProjectForm({ action, project, categories }: { action: (s: FormS
           <Input label="Slug" name="slug" defaultValue={project?.slug} hint="Leave empty to create one from the title." />
         </div>
         <Textarea label="Summary" name="description" defaultValue={project?.description} rows={3} required hint="Shown on the project card." />
+        <Input label="Key result" name="outcome" defaultValue={project?.outcome} placeholder="Cut weekly reporting from 6 hours to 20 minutes" hint="Optional one-line outcome, highlighted on the card. Use real figures only." />
         <Input label="Tags" name="tags" defaultValue={project?.tags.join(", ")} hint="Comma separated, for example Python, BigQuery, SQL." />
       </Panel>
       <Panel title="Case study" description="Optional. When you write one, the project gets its own page and the card links to it. Cover the problem, your approach, the stack and the results.">
@@ -38,7 +39,10 @@ export function ProjectForm({ action, project, categories }: { action: (s: FormS
       </Panel>
       <Panel title="Visibility">
         <div className="grid gap-5 sm:grid-cols-[1fr_160px] sm:items-end">
-          <Checkbox label="Show on the site" name="published" defaultChecked={project?.published ?? true} />
+          <div className="flex flex-col gap-4">
+            <Checkbox label="Show on the site" name="published" defaultChecked={project?.published ?? true} />
+            <Checkbox label="Feature this project" name="featured" defaultChecked={project?.featured ?? false} hint="Featured projects appear as large cards at the top of the section. Pick your one or two strongest." />
+          </div>
           <Input label="Order" name="sortOrder" type="number" defaultValue={project?.sortOrder ?? 0} hint="Lowest first." />
         </div>
       </Panel>

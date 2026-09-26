@@ -85,6 +85,10 @@ export const projects = pgTable("projects", {
   liveUrl: text("live_url"),
   githubUrl: text("github_url"),
   published: boolean("published").notNull().default(true),
+  /** Shown as a large showcase card at the top of the projects section. */
+  featured: boolean("featured").notNull().default(false),
+  /** Optional one-line result, for example "Cut weekly reporting from 6 hours to 20 minutes". */
+  outcome: text("outcome").notNull().default(""),
   sortOrder: integer("sort_order").notNull().default(0),
   ...timestamps,
 });

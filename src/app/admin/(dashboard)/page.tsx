@@ -24,6 +24,7 @@ export default async function DashboardPage() {
     settings.highlights.length === 0 && "Add proof points under the hero",
     !settings.resumeUrl && "Upload your CV",
     !projects.some((p) => p.body.trim()) && "Write a case study for your strongest project",
+    !projects.some((p) => p.featured) && "Choose which projects to feature (the first two are shown until you do)",
     experiences.some((e) => !e.startDate) && "Add start dates to your experience",
     education.some((e) => !e.institution || (!e.startYear && !e.endYear)) && "Complete your education details",
     projects.some((p) => !p.liveUrl && !p.githubUrl) && "Add demo or GitHub links to your projects",

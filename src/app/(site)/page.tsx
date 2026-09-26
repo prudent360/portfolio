@@ -3,11 +3,20 @@ import Link from "next/link";
 import { BriefcaseIcon, CapIcon, DownloadIcon, SkillIcon, WARM_ICONS, type SkillIconKey } from "@/components/icons";
 import { CornerShapes, PipelineDiagram } from "@/components/site/illustrations";
 import { PostCard } from "@/components/site/post-card";
-import { ProjectsGrid } from "@/components/site/projects-grid";
+import { ProjectsGrid, type PublicProject } from "@/components/site/projects-grid";
+import type { Project } from "@/db/schema";
 import { SectionHeading } from "@/components/site/section-heading";
 import { getEducation, getExperiences, getProjects, getPublishedPosts, getSettings, getSkillGroups } from "@/lib/data";
 import { absoluteUrl, jsonLd } from "@/lib/site";
 import { formatMonth, formatRange, fullName } from "@/lib/utils";
+
+function toPublicProject(p: Project): PublicProject {
+  return {
+    id: p.id, title: p.title, category: p.category, description: p.description, outcome: p.outcome, tags: p.tags,
+    thumbnail: p.thumbnail, imageUrl: p.imageUrl, liveUrl: p.liveUrl, githubUrl: p.githubUrl,
+    href: p.body.trim() ? `/projects/${p.slug}` : null,
+  };
+}
 
 export default async function HomePage() {
   const [settings, skills, projects, experiences, education, posts] = await Promise.all([
@@ -20,6 +29,10 @@ export default async function HomePage() {
   ]);
   const name = fullName(settings.firstName, settings.lastName);
   const initials = [settings.firstName, settings.lastName].map((n) => n.charAt(0)).join("").toUpperCase();
+  // Projects marked "featured" in the admin; until any are, the first two by order.
+  const flagged = projects.filter((p) => p.featured);
+  const featuredProjects = flagged.length ? flagged : projects.slice(0, 2);
+  const otherProjects = projects.filter((p) => !featuredProjects.includes(p));
   const aboutParagraphs = settings.about.split(/\n\s*\n/).map((p) => p.trim()).filter(Boolean);
   const currentJob = experiences.find((job) => job.startDate && !job.endDate);
   const structuredData = {
@@ -138,13 +151,7 @@ export default async function HomePage() {
       {projects.length > 0 && (
         <section id="projects" className="mx-auto flex max-w-[1200px] flex-col gap-10 px-5 py-20 sm:px-8 md:py-24">
           <SectionHeading title="Featured Projects" subtitle="Pipelines, models and reports I've built end to end" />
-          <ProjectsGrid
-            projects={projects.map((p) => ({
-              id: p.id, title: p.title, category: p.category, description: p.description, tags: p.tags,
-              thumbnail: p.thumbnail, imageUrl: p.imageUrl, liveUrl: p.liveUrl, githubUrl: p.githubUrl,
-              href: p.body.trim() ? `/projects/${p.slug}` : null,
-            }))}
-          />
+          <ProjectsGrid featured={featuredProjects.map(toPublicProject)} others={otherProjects.map(toPublicProject)} />
         </section>
       )}
 
@@ -167,33 +174,50 @@ export default async function HomePage() {
 
       {/* About */}
       <section id="about" className="border-t border-line bg-white">
-        <div className="mx-auto flex max-w-[1200px] flex-col gap-12 px-5 py-20 sm:px-8 md:py-24">
-          <div className="flex items-center gap-6">
-            {settings.photoUrl ? (
-              <Image src={settings.photoUrl} alt={name} width={96} height={96} className="size-24 shrink-0 rounded-full object-cover" />
-            ) : (
-              <div className="flex size-24 shrink-0 items-center justify-center rounded-full bg-accent-soft font-display text-3xl font-semibold text-accent" aria-hidden="true">
-                {initials}
+        <div className="mx-auto flex max-w-[1200px] flex-col gap-16 px-5 py-20 sm:px-8 md:py-24">
+          <div className="grid items-start gap-10 md:grid-cols-[minmax(0,340px)_minmax(0,1fr)] lg:gap-16">
+            <div className="flex flex-col gap-5">
+              <div className="relative aspect-[4/5] w-full max-w-[340px] overflow-hidden rounded-[14px] bg-accent-soft">
+                {settings.photoUrl ? (
+                  <Image src={settings.photoUrl} alt={name ? `Portrait of ${name}` : ""} fill sizes="(min-width: 768px) 340px, 100vw" className="object-cover" />
+                ) : (
+                  <div className="flex h-full items-center justify-center font-display text-7xl font-semibold text-accent" aria-hidden="true">{initials}</div>
+                )}
               </div>
-            )}
-            <div className="flex flex-col gap-1">
-              <p className="font-display text-[26px] font-semibold">{name}</p>
-              {settings.role && <p className="text-[17px] text-body">{settings.role}</p>}
-              {settings.location && <p className="text-base text-muted">{settings.location}</p>}
+              {(settings.contactEyebrow || settings.location) && (
+                <div className="flex flex-col gap-2">
+                  {settings.contactEyebrow && (
+                    <p className="flex items-center gap-2 text-[15px] font-semibold text-ink">
+                      <span className="size-2 shrink-0 rounded-full bg-emerald-500" aria-hidden="true" />
+                      {settings.contactEyebrow}
+                    </p>
+                  )}
+                  {settings.location && <p className="text-[15px] text-muted">{settings.location}</p>}
+                </div>
+              )}
             </div>
-          </div>
-          <div className="grid gap-12 lg:grid-cols-12">
-            <div className="flex flex-col gap-5 lg:col-span-7">
-              <h2 className="font-display text-3xl font-semibold tracking-tight md:text-[34px]">About Me</h2>
+            <div className="flex flex-col gap-5">
+              <h2 className="font-display text-3xl font-semibold tracking-tight md:text-[40px]">About me</h2>
               {aboutParagraphs.map((paragraph, i) => (
                 <p key={i} className="text-lg leading-[1.75] text-body">{paragraph}</p>
               ))}
+              <div className="mt-3 flex flex-wrap gap-3">
+                <a href="#contact" className="inline-flex h-12 items-center rounded-lg bg-accent px-6 font-semibold text-white hover:bg-accent-dark">Get in touch</a>
+                {settings.resumeUrl && (
+                  <a href={settings.resumeUrl} target="_blank" rel="noopener noreferrer" className="inline-flex h-12 items-center gap-2 rounded-lg border-[1.5px] border-accent px-6 font-semibold text-accent hover:bg-accent-soft">
+                    <DownloadIcon className="size-[18px]" /> Download CV
+                  </a>
+                )}
+              </div>
             </div>
-            <div className="flex flex-col gap-10 lg:col-span-5">
+          </div>
+
+          {(experiences.length > 0 || education.length > 0) && (
+            <div className="grid gap-12 border-t border-line pt-14 md:grid-cols-2 lg:gap-16">
               {experiences.length > 0 && (
-                <div className="flex flex-col gap-5">
+                <div className="flex flex-col gap-6">
                   <h2 className="font-display text-[26px] font-semibold">Experience</h2>
-                  <ol className="ml-[15px] flex flex-col gap-5.5 border-l-2 border-edge-strong">
+                  <ol className="ml-[15px] flex flex-col gap-6 border-l-2 border-edge-strong">
                     {experiences.map((job) => {
                       const range = formatRange(job.startDate, job.endDate, formatMonth);
                       return (
@@ -202,9 +226,9 @@ export default async function HomePage() {
                             <BriefcaseIcon className="size-4" />
                           </span>
                           <div className="flex flex-col gap-1">
-                            <p className="text-base font-semibold">{job.role} · {job.company}</p>
-                            {range && <p className="font-mono text-[13px] text-muted">{range}</p>}
-                            {job.description && <p className="text-[15px] leading-relaxed text-body">{job.description}</p>}
+                            <p className="text-base font-semibold leading-snug">{job.role}</p>
+                            <p className="text-[15px] text-body">{job.company}{range && <span className="font-mono text-[13px] text-muted"> · {range}</span>}</p>
+                            {job.description && <p className="mt-1 text-[15px] leading-relaxed text-muted">{job.description}</p>}
                           </div>
                         </li>
                       );
@@ -213,9 +237,9 @@ export default async function HomePage() {
                 </div>
               )}
               {education.length > 0 && (
-                <div className="flex flex-col gap-5">
+                <div className="flex flex-col gap-6">
                   <h2 className="font-display text-[26px] font-semibold">Education</h2>
-                  <ul className="flex flex-col gap-4.5">
+                  <ul className="flex flex-col gap-6">
                     {education.map((item) => {
                       const range = item.startYear && item.endYear ? `${item.startYear} – ${item.endYear}` : item.startYear || item.endYear || "";
                       return (
@@ -224,8 +248,10 @@ export default async function HomePage() {
                             <CapIcon className="size-4" />
                           </span>
                           <div className="flex flex-col gap-1">
-                            <p className="text-base font-semibold">{[item.degree, item.institution].filter(Boolean).join(" · ")}</p>
-                            {range && <p className="font-mono text-[13px] text-muted">{range}</p>}
+                            <p className="text-base font-semibold leading-snug">{item.degree}</p>
+                            {(item.institution || range) && (
+                              <p className="text-[15px] text-body">{item.institution}{range && <span className="font-mono text-[13px] text-muted">{item.institution ? " · " : ""}{range}</span>}</p>
+                            )}
                           </div>
                         </li>
                       );
@@ -234,7 +260,7 @@ export default async function HomePage() {
                 </div>
               )}
             </div>
-          </div>
+          )}
         </div>
       </section>
     </>

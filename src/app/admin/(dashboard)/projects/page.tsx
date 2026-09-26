@@ -29,7 +29,12 @@ export default async function ProjectsPage() {
                   <td className="px-5 py-3.5"><Link href={`/admin/projects/${p.id}`} className="font-semibold hover:text-accent">{p.title}</Link></td>
                   <td className="px-5 py-3.5 text-body">{p.category}</td>
                   <td className="px-5 py-3.5 text-sm text-muted">{[p.liveUrl && "Demo", p.githubUrl && "GitHub"].filter(Boolean).join(", ") || "None"}</td>
-                  <td className="px-5 py-3.5"><Badge tone={p.published ? "green" : "grey"}>{p.published ? "Visible" : "Hidden"}</Badge></td>
+                  <td className="px-5 py-3.5">
+                    <span className="flex flex-wrap gap-1.5">
+                      <Badge tone={p.published ? "green" : "grey"}>{p.published ? "Visible" : "Hidden"}</Badge>
+                      {p.featured && <Badge tone="green">Featured</Badge>}
+                    </span>
+                  </td>
                 </tr>
               ))}
             </tbody>

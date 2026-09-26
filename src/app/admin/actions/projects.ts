@@ -19,6 +19,7 @@ const schema = z.object({
   category: text(60),
   description: required("Description", 600),
   body: text(100_000),
+  outcome: text(140),
   thumbnail: z.enum(THUMBNAILS).catch("flow"),
   liveUrl: optionalUrl,
   githubUrl: optionalUrl,
@@ -59,6 +60,7 @@ async function save(id: number | null, formData: FormData): Promise<FormState | 
     githubUrl: nullIfEmpty(parsed.data.githubUrl),
     tags: parseList(formData.get("tags")).slice(0, 12),
     published: formData.get("published") === "on",
+    featured: formData.get("featured") === "on",
     imageUrl,
   };
 
