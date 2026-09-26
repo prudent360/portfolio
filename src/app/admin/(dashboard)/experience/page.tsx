@@ -28,7 +28,7 @@ function ExperienceFields({ job }: { job?: Experience }) {
         placeholder={"Built a GA4 to BigQuery pipeline used by 5 teams\nCut weekly reporting time from 6 hours to 20 minutes"}
         hint="One achievement per line; each line shows as a bullet point, like on a CV. Start with a verb and include a result where you can."
       />
-      <Input label="Order" name="sortOrder" type="number" defaultValue={job?.sortOrder ?? 0} className="max-w-[160px]" />
+      <Input label="Order" name="sortOrder" type="number" defaultValue={job?.sortOrder ?? 0} className="max-w-[220px]" hint="Roles sort by date automatically. This only orders roles with the same dates." />
     </>
   );
 }
@@ -40,7 +40,7 @@ function EducationFields({ item }: { item?: Education }) {
       <Input label="Institution" name="institution" defaultValue={item?.institution} className="sm:col-span-2" />
       <Input label="Start year" name="startYear" inputMode="numeric" pattern="\d{4}" defaultValue={item?.startYear ?? ""} />
       <Input label="End year" name="endYear" inputMode="numeric" pattern="\d{4}" defaultValue={item?.endYear ?? ""} />
-      <Input label="Order" name="sortOrder" type="number" defaultValue={item?.sortOrder ?? 0} />
+      <Input label="Order" name="sortOrder" type="number" defaultValue={item?.sortOrder ?? 0} hint="Sorted by year automatically; this breaks ties." />
     </div>
   );
 }
@@ -49,7 +49,7 @@ export default async function ExperiencePage() {
   const [jobs, education] = await Promise.all([getExperiences(), getEducation()]);
   return (
     <>
-      <PageHeader title="Experience and education" description="Shown in the About section, lowest order first." />
+      <PageHeader title="Experience and education" description="Shown in the Experience section, newest first." />
       <h2 className="font-display text-2xl font-semibold">Experience</h2>
       {jobs.map((job) => (
         <Panel key={job.id} title={`${job.role} · ${job.company}`}>

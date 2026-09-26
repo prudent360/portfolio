@@ -166,39 +166,37 @@ export default async function HomePage() {
       {/* Experience & education, laid out like a CV */}
       {(experiences.length > 0 || education.length > 0) && (
         <section id="experience" className="border-t border-line">
-          <div className="mx-auto flex max-w-[1200px] flex-col gap-16 px-5 py-20 sm:px-8 md:py-24">
+          <div className="mx-auto flex max-w-[1200px] flex-col gap-14 px-5 py-20 sm:px-8 md:py-24">
             {experiences.length > 0 && (
-              <div className="flex flex-col gap-8">
-                <SectionHeading align="left" title="Experience" />
-                <ol className="flex flex-col divide-y divide-edge-strong border-y border-edge-strong">
+              <div className="flex max-w-[880px] flex-col gap-6">
+                <h2 className="font-display text-3xl font-semibold tracking-tight md:text-[36px]">Experience</h2>
+                <ol className="flex flex-col divide-y divide-edge-strong border-t border-edge-strong">
                   {experiences.map((job) => {
                     const range = formatRange(job.startDate, job.endDate, formatMonth);
                     const current = Boolean(job.startDate && !job.endDate);
                     const achievements = job.description.split("\n").map((line) => line.replace(/^[\s•\-*]+/, "").trim()).filter(Boolean);
                     return (
-                      <li key={job.id} className="grid gap-3 py-8 md:grid-cols-[220px_minmax(0,1fr)] md:gap-10">
-                        <div className="flex flex-col gap-1 font-mono text-[13px] text-muted md:pt-1">
-                          {range && <span>{range}</span>}
-                          {job.location && <span>{job.location}</span>}
+                      <li key={job.id} className="flex flex-col gap-1.5 py-6">
+                        <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                          <h3 className="font-display text-xl font-semibold leading-snug text-ink">{job.role}</h3>
+                          {current && <span className="rounded-full bg-emerald-50 px-2 py-0.5 font-mono text-[11px] uppercase tracking-wider text-emerald-800">Current</span>}
                         </div>
-                        <div className="flex flex-col gap-2">
-                          <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-                            <h3 className="font-display text-xl font-semibold leading-snug text-ink">{job.role}</h3>
-                            {current && <span className="rounded-full bg-emerald-50 px-2 py-0.5 font-mono text-[11px] uppercase tracking-wider text-emerald-800">Current</span>}
-                          </div>
-                          <p className="text-base font-medium text-accent">{job.company}</p>
-                          {achievements.length === 1 && <p className="mt-1 text-[16px] leading-relaxed text-body">{achievements[0]}</p>}
-                          {achievements.length > 1 && (
-                            <ul className="mt-1 flex flex-col gap-2 text-[16px] leading-relaxed text-body">
-                              {achievements.map((line, i) => (
-                                <li key={i} className="flex gap-3">
-                                  <span className="mt-[11px] size-1.5 shrink-0 rounded-full bg-accent" aria-hidden="true" />
-                                  <span>{line}</span>
-                                </li>
-                              ))}
-                            </ul>
-                          )}
-                        </div>
+                        <p className="flex flex-wrap items-center gap-x-2 text-[15px]">
+                          <span className="font-semibold text-accent">{job.company}</span>
+                          {range && <><span className="text-[#A3A9B6]" aria-hidden="true">·</span><span className="text-muted">{range}</span></>}
+                          {job.location && <><span className="text-[#A3A9B6]" aria-hidden="true">·</span><span className="text-muted">{job.location}</span></>}
+                        </p>
+                        {achievements.length === 1 && <p className="mt-1.5 text-[16px] leading-relaxed text-body">{achievements[0]}</p>}
+                        {achievements.length > 1 && (
+                          <ul className="mt-1.5 flex flex-col gap-1.5 text-[16px] leading-relaxed text-body">
+                            {achievements.map((line, i) => (
+                              <li key={i} className="flex gap-3">
+                                <span className="mt-[11px] size-1.5 shrink-0 rounded-full bg-accent" aria-hidden="true" />
+                                <span>{line}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        )}
                       </li>
                     );
                   })}
@@ -207,18 +205,21 @@ export default async function HomePage() {
             )}
 
             {education.length > 0 && (
-              <div id="education" className="flex scroll-mt-24 flex-col gap-8">
-                <SectionHeading align="left" title="Education" />
-                <ul className="flex flex-col divide-y divide-edge-strong border-y border-edge-strong">
+              <div id="education" className="flex max-w-[880px] scroll-mt-24 flex-col gap-6">
+                <h2 className="font-display text-3xl font-semibold tracking-tight md:text-[36px]">Education</h2>
+                <ul className="flex flex-col divide-y divide-edge-strong border-t border-edge-strong">
                   {education.map((item) => {
                     const range = item.startYear && item.endYear ? `${item.startYear} – ${item.endYear}` : item.startYear || item.endYear || "";
                     return (
-                      <li key={item.id} className="grid gap-3 py-8 md:grid-cols-[220px_minmax(0,1fr)] md:gap-10">
-                        <div className="font-mono text-[13px] text-muted md:pt-1">{range}</div>
-                        <div className="flex flex-col gap-1">
-                          <h3 className="font-display text-xl font-semibold leading-snug text-ink">{item.degree}</h3>
-                          {item.institution && <p className="text-base font-medium text-accent">{item.institution}</p>}
-                        </div>
+                      <li key={item.id} className="flex flex-col gap-1.5 py-6">
+                        <h3 className="font-display text-xl font-semibold leading-snug text-ink">{item.degree}</h3>
+                        {(item.institution || range) && (
+                          <p className="flex flex-wrap items-center gap-x-2 text-[15px]">
+                            {item.institution && <span className="font-semibold text-accent">{item.institution}</span>}
+                            {item.institution && range && <span className="text-[#A3A9B6]" aria-hidden="true">·</span>}
+                            {range && <span className="text-muted">{range}</span>}
+                          </p>
+                        )}
                       </li>
                     );
                   })}

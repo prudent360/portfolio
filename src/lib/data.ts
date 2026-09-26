@@ -40,14 +40,33 @@ export const getPublishedProject = cache(async (slug: string) => {
   return row ?? null;
 });
 
+/**
+ * Newest first, as on a CV: current roles (start date, no end date), then by end date and start
+ * date descending. Roles without dates go last. The manual order breaks ties.
+ */
+export function sortExperiences<T extends { startDate: string | null; endDate: string | null; sortOrder: number; id: number }>(rows: T[]): T[] {
+  const rank = (row: T) => (row.startDate && !row.endDate ? 0 : row.startDate || row.endDate ? 1 : 2);
+  return [...rows].sort(
+    (a, b) =>
+      rank(a) - rank(b) ||
+      (b.endDate ?? "").localeCompare(a.endDate ?? "") ||
+      (b.startDate ?? "").localeCompare(a.startDate ?? "") ||
+      a.sortOrder - b.sortOrder ||
+      a.id - b.id,
+  );
+}
+
 export async function getExperiences() {
   const db = await getDb();
-  return db.select().from(experiences).orderBy(asc(experiences.sortOrder), desc(experiences.startDate));
+  return sortExperiences(await db.select().from(experiences));
 }
 
 export async function getEducation() {
   const db = await getDb();
-  return db.select().from(education).orderBy(asc(education.sortOrder), asc(education.id));
+  const rows = await db.select().from(education);
+  // Newest first; entries without years go last, the manual order breaks ties.
+  const year = (row: (typeof rows)[number]) => row.endYear || row.startYear || "";
+  return rows.sort((a, b) => (year(a) ? 0 : 1) - (year(b) ? 0 : 1) || year(b).localeCompare(year(a)) || a.sortOrder - b.sortOrder || a.id - b.id);
 }
 
 export async function getPublishedPosts(limit?: number) {
