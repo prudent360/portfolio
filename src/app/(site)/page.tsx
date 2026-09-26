@@ -50,9 +50,28 @@ export default async function HomePage() {
       <section id="home" className="relative overflow-hidden">
         <div className="relative z-10 mx-auto grid max-w-[1200px] items-center gap-12 px-5 pb-20 pt-14 sm:px-8 md:pb-34 md:pt-28 lg:grid-cols-2 lg:gap-16">
           <div className="flex flex-col gap-6">
-            {settings.eyebrow && (
-              <p className="font-mono text-sm font-medium uppercase tracking-[2px] text-accent md:text-[15px]">{settings.eyebrow}</p>
-            )}
+            {/* Identity: who this site belongs to */}
+            <div className="flex items-center gap-4">
+              {settings.photoUrl ? (
+                <Image src={settings.photoUrl} alt="" width={64} height={64} priority className="size-14 shrink-0 rounded-full object-cover ring-4 ring-white md:size-16" />
+              ) : (
+                <div aria-hidden="true" className="flex size-14 shrink-0 items-center justify-center rounded-full bg-accent font-display text-xl font-semibold text-white ring-4 ring-white md:size-16 md:text-2xl">
+                  {initials}
+                </div>
+              )}
+              <div className="flex min-w-0 flex-col gap-1">
+                {name && (
+                  <p className="font-display text-xl font-semibold leading-tight text-ink md:text-2xl">
+                    <span className="sr-only">Hi, I&apos;m </span>{name}
+                  </p>
+                )}
+                {(settings.eyebrow || settings.role) && (
+                  <p className="font-mono text-xs font-medium uppercase tracking-[1px] text-accent sm:text-[13px] sm:tracking-[1.5px] md:text-sm">
+                    {settings.eyebrow || settings.role}
+                  </p>
+                )}
+              </div>
+            </div>
             <h1 className="font-display text-[40px] font-semibold leading-[1.08] tracking-tight text-ink sm:text-5xl lg:text-[64px] lg:tracking-[-1.5px]">
               {settings.headline || name}
             </h1>

@@ -23,7 +23,7 @@ export default async function ProfilePage() {
           <FileField label="Profile photo" name="photo" current={s.photoUrl} removeName="removePhoto" />
         </Panel>
         <Panel title="Hero">
-          <Input label="Eyebrow" name="eyebrow" defaultValue={s.eyebrow} hint="Small line above the headline." />
+          <Input label="Tagline" name="eyebrow" defaultValue={s.eyebrow} hint="Shown under your name at the top of the page, for example “Data Engineer · Python · SQL”." />
           <Input label="Headline" name="headline" defaultValue={s.headline} required />
           <Textarea label="Intro" name="intro" defaultValue={s.intro} rows={3} />
           <Textarea
