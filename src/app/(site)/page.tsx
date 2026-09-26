@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { BriefcaseIcon, CapIcon, DownloadIcon, SkillIcon, WARM_ICONS, type SkillIconKey } from "@/components/icons";
+import { ArrowUpRight, CapIcon, DownloadIcon, SkillIcon, WARM_ICONS, type SkillIconKey } from "@/components/icons";
 import { CornerShapes, PipelineDiagram } from "@/components/site/illustrations";
 import { PostCard } from "@/components/site/post-card";
 import { ProjectsGrid, type PublicProject } from "@/components/site/projects-grid";
@@ -120,29 +120,30 @@ export default async function HomePage() {
       {/* Skills */}
       {skills.length > 0 && (
         <section id="skills" className="border-y border-line bg-white">
-          <div className="mx-auto flex max-w-[1200px] flex-col gap-14 px-5 py-20 sm:px-8 md:py-24">
-            <SectionHeading title="Technical Skills" subtitle="The stack I use to move data from source to decision" />
-            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="mx-auto grid max-w-[1200px] gap-10 px-5 py-20 sm:px-8 md:py-24 lg:grid-cols-[minmax(0,360px)_minmax(0,1fr)] lg:gap-16">
+            <div className="lg:sticky lg:top-32 lg:self-start">
+              <SectionHeading align="left" title="Technical skills" subtitle="The stack I use to move data from source to decision." />
+            </div>
+            <ul className="flex flex-col divide-y divide-line">
               {skills.map((group) => {
                 const warm = WARM_ICONS.includes(group.icon as SkillIconKey);
                 return (
-                  <div key={group.id} className="flex flex-col gap-5 rounded-[14px] border border-edge bg-panel px-7 py-8">
-                    <div className={`flex size-14 items-center justify-center rounded-xl ${warm ? "bg-orange-soft text-orange-ink" : "bg-accent-soft text-accent"}`}>
-                      <SkillIcon name={group.icon} className="size-7" />
+                  <li key={group.id} className="grid gap-4 py-6 first:pt-0 last:pb-0 sm:grid-cols-[250px_minmax(0,1fr)] sm:gap-6">
+                    <div className="flex items-center gap-3 sm:items-start">
+                      <span className={`flex size-10 shrink-0 items-center justify-center rounded-lg ${warm ? "bg-orange-soft text-orange-ink" : "bg-accent-soft text-accent"}`}>
+                        <SkillIcon name={group.icon} className="size-5" />
+                      </span>
+                      <h3 className="font-display text-lg font-semibold leading-snug text-ink sm:pt-2">{group.title}</h3>
                     </div>
-                    <h3 className="font-display text-[22px] font-semibold text-accent">{group.title}</h3>
-                    <ul className="flex flex-col gap-3 text-base text-body">
+                    <ul className="flex flex-wrap content-start gap-2 sm:pt-1" aria-label={group.title}>
                       {group.items.map((item) => (
-                        <li key={item} className="flex items-center gap-2.5">
-                          <span className="size-[7px] shrink-0 rounded-full bg-accent" aria-hidden="true" />
-                          {item}
-                        </li>
+                        <li key={item} className="rounded-full border border-edge bg-panel px-3.5 py-1.5 text-[15px] text-body">{item}</li>
                       ))}
                     </ul>
-                  </div>
+                  </li>
                 );
               })}
-            </div>
+            </ul>
           </div>
         </section>
       )}
@@ -158,15 +159,15 @@ export default async function HomePage() {
       {/* Writing */}
       {posts.length > 0 && (
         <section id="writing" className="border-t border-line bg-white">
-          <div className="mx-auto flex max-w-[1200px] flex-col gap-12 px-5 py-20 sm:px-8 md:py-24">
-            <SectionHeading title="Latest Writing" subtitle="Notes on pipelines, modelling and reporting" />
+          <div className="mx-auto flex max-w-[1200px] flex-col gap-10 px-5 py-20 sm:px-8 md:py-24">
+            <div className="flex flex-wrap items-end justify-between gap-6">
+              <SectionHeading align="left" title="Latest writing" subtitle="Notes on pipelines, modelling and reporting." />
+              <Link href="/blog" className="inline-flex items-center gap-1.5 text-[16px] font-semibold text-accent hover:text-accent-dark">
+                All posts <ArrowUpRight className="size-4" />
+              </Link>
+            </div>
             <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
               {posts.map((post) => <PostCard key={post.id} post={post} />)}
-            </div>
-            <div className="flex justify-center">
-              <Link href="/blog" className="flex h-12 items-center rounded-lg border-[1.5px] border-accent px-7 font-semibold text-accent hover:bg-accent-soft">
-                All posts
-              </Link>
             </div>
           </div>
         </section>
@@ -217,17 +218,24 @@ export default async function HomePage() {
               {experiences.length > 0 && (
                 <div className="flex flex-col gap-6">
                   <h2 className="font-display text-[26px] font-semibold">Experience</h2>
-                  <ol className="ml-[15px] flex flex-col gap-6 border-l-2 border-edge-strong">
-                    {experiences.map((job) => {
+                  <ol className="flex flex-col">
+                    {experiences.map((job, index) => {
                       const range = formatRange(job.startDate, job.endDate, formatMonth);
+                      const current = Boolean(job.startDate && !job.endDate);
+                      const last = index === experiences.length - 1;
                       return (
-                        <li key={job.id} className="-ml-4 flex gap-4">
-                          <span className="flex size-[30px] shrink-0 items-center justify-center rounded-lg bg-accent-soft text-accent">
-                            <BriefcaseIcon className="size-4" />
-                          </span>
-                          <div className="flex flex-col gap-1">
-                            <p className="text-base font-semibold leading-snug">{job.role}</p>
-                            <p className="text-[15px] text-body">{job.company}{range && <span className="font-mono text-[13px] text-muted"> · {range}</span>}</p>
+                        <li key={job.id} className="grid grid-cols-[20px_minmax(0,1fr)] gap-x-4">
+                          <div className="flex flex-col items-center" aria-hidden="true">
+                            <span className={`mt-1.5 size-3 shrink-0 rounded-full border-2 ${current ? "border-accent bg-accent" : "border-edge-strong bg-white"}`} />
+                            {!last && <span className="w-0.5 grow bg-edge-strong" />}
+                          </div>
+                          <div className={`flex flex-col gap-1 ${last ? "" : "pb-7"}`}>
+                            <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                              <p className="text-base font-semibold leading-snug">{job.role}</p>
+                              {current && <span className="rounded-full bg-emerald-50 px-2 py-0.5 font-mono text-[11px] uppercase tracking-wider text-emerald-800">Current</span>}
+                            </div>
+                            <p className="text-[15px] text-body">{job.company}</p>
+                            {range && <p className="font-mono text-[13px] text-muted">{range}</p>}
                             {job.description && <p className="mt-1 text-[15px] leading-relaxed text-muted">{job.description}</p>}
                           </div>
                         </li>
