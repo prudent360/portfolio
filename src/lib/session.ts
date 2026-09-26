@@ -6,12 +6,18 @@ export const SESSION_TTL_SECONDS = 60 * 60 * 24 * 7;
 
 export type SessionPayload = { userId: number; email: string };
 
+/** Describes what is wrong with SESSION_SECRET, or returns null when it is usable. */
+export function sessionSecretProblem(): string | null {
+  const secret = process.env.SESSION_SECRET?.trim();
+  if (!secret) return "SESSION_SECRET is not set.";
+  if (secret.length < 32) return `SESSION_SECRET is only ${secret.length} characters; it needs at least 32.`;
+  return null;
+}
+
 function secretKey(): Uint8Array {
-  const secret = process.env.SESSION_SECRET;
-  if (!secret || secret.length < 32) {
-    throw new Error("SESSION_SECRET must be set to a random string of at least 32 characters.");
-  }
-  return new TextEncoder().encode(secret);
+  const problem = sessionSecretProblem();
+  if (problem) throw new Error(`${problem} Generate one with: openssl rand -base64 32`);
+  return new TextEncoder().encode(process.env.SESSION_SECRET!.trim());
 }
 
 export async function signSession(payload: SessionPayload): Promise<string> {

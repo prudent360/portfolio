@@ -9,6 +9,7 @@ import { users } from "@/db/schema";
 import { createSession, destroySession, requireAdmin } from "@/lib/auth";
 import { MIN_PASSWORD_LENGTH } from "@/lib/password";
 import { clearLoginFailures, loginBlockedFor, recordLoginFailure } from "@/lib/rate-limit";
+import { sessionSecretProblem } from "@/lib/session";
 import { firstError, type FormState } from "@/lib/validation";
 
 // Compared against when the email is unknown so response time does not reveal which emails exist.
@@ -36,6 +37,11 @@ export async function login(_state: FormState, formData: FormData): Promise<Form
   }
 
   await clearLoginFailures(email);
+  const secretProblem = sessionSecretProblem();
+  if (secretProblem) {
+    console.error(`Admin sign-in blocked: ${secretProblem}`);
+    return { error: "Sign-in isn't configured on the server: SESSION_SECRET is missing or too short. Set it in the hosting environment variables and redeploy." };
+  }
   await createSession({ userId: user.id, email: user.email });
   redirect("/admin");
 }

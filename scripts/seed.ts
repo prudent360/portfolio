@@ -2,6 +2,7 @@ import bcrypt from "bcryptjs";
 import { eq } from "drizzle-orm";
 import { closeDb, createDb, runMigrations } from "../src/db/client";
 import { passwordProblem } from "../src/lib/password";
+import { sessionSecretProblem } from "../src/lib/session";
 import {
   education,
   experiences,
@@ -19,6 +20,18 @@ import {
  *   (when the settings row does not exist yet), so later edits are never overwritten.
  */
 async function main() {
+  // Fail the deploy early rather than letting sign-in break at runtime.
+  if (process.env.VERCEL) {
+    const problems = [
+      sessionSecretProblem(),
+      !process.env.ADMIN_EMAIL?.trim() && "ADMIN_EMAIL is not set.",
+      !process.env.ADMIN_PASSWORD && "ADMIN_PASSWORD is not set.",
+    ].filter(Boolean);
+    if (problems.length) {
+      throw new Error(`Missing Vercel environment variables:\n- ${problems.join("\n- ")}\nAdd them in Project Settings > Environment Variables (Production), then redeploy.`);
+    }
+  }
+
   const db = await createDb();
   await runMigrations(db);
 
