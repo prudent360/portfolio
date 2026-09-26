@@ -1,13 +1,6 @@
 import Link from "next/link";
 import { MenuIcon } from "@/components/icons";
-
-const LINKS = [
-  { href: "/#skills", label: "Skills" },
-  { href: "/#projects", label: "Projects" },
-  { href: "/blog", label: "Blog" },
-  { href: "/#about", label: "About" },
-  { href: "/#contact", label: "Contact" },
-];
+import { NavLinks } from "./nav-links";
 
 export function SiteHeader({ brand }: { brand: string }) {
   return (
@@ -17,24 +10,14 @@ export function SiteHeader({ brand }: { brand: string }) {
           {brand || "Portfolio"}
         </Link>
         <nav aria-label="Main" className="hidden h-full items-center gap-1 md:flex">
-          <Link href="/" className="flex h-full items-center px-4 text-[15px] font-medium text-muted hover:text-ink">Home</Link>
-          {LINKS.map((link) => (
-            <Link key={link.href} href={link.href} className="flex h-full items-center px-4 text-[15px] font-medium text-muted hover:text-ink">
-              {link.label}
-            </Link>
-          ))}
+          <NavLinks variant="desktop" />
         </nav>
         <details className="group relative md:hidden">
           <summary className="flex size-11 cursor-pointer list-none items-center justify-center rounded-lg border border-edge text-ink [&::-webkit-details-marker]:hidden" aria-label="Open menu">
             <MenuIcon />
           </summary>
           <nav aria-label="Mobile" className="absolute right-0 top-13 flex w-52 flex-col rounded-xl border border-edge bg-white p-2 shadow-lg">
-            <Link href="/" className="rounded-lg px-4 py-3 text-[15px] font-medium hover:bg-page">Home</Link>
-            {LINKS.map((link) => (
-              <Link key={link.href} href={link.href} className="rounded-lg px-4 py-3 text-[15px] font-medium hover:bg-page">
-                {link.label}
-              </Link>
-            ))}
+            <NavLinks variant="mobile" />
           </nav>
         </details>
       </div>

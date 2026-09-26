@@ -16,7 +16,7 @@ function extractText(node: React.ReactNode): string {
 /** Renders trusted-author Markdown with matching heading IDs and high-contrast code blocks. */
 export function Markdown({ children }: { children: string }) {
   return (
-    <div className="prose prose-slate max-w-none text-slate-700 leading-relaxed prose-headings:font-display prose-headings:tracking-tight prose-a:text-accent prose-a:font-medium hover:prose-a:text-accent-dark prose-code:before:content-none prose-code:after:content-none prose-img:rounded-xl prose-img:border prose-img:border-slate-200">
+    <div className="prose prose-lg prose-slate max-w-none text-body leading-relaxed prose-headings:font-display prose-headings:tracking-tight prose-a:text-accent prose-a:font-medium hover:prose-a:text-accent-dark prose-code:before:content-none prose-code:after:content-none prose-img:rounded-xl prose-img:border prose-img:border-edge">
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
         components={{
@@ -26,12 +26,12 @@ export function Markdown({ children }: { children: string }) {
             return (
               <h2
                 id={id}
-                className="group scroll-mt-24 mt-12 mb-5 flex items-center gap-2.5 border-b border-slate-100 pb-3 font-display text-2xl font-bold tracking-tight text-slate-900 md:text-[26px]"
+                className="group scroll-mt-24 mt-12 mb-5 flex items-center gap-2.5 border-b border-line pb-3 font-display text-2xl font-semibold tracking-tight text-ink md:text-[26px]"
                 {...props}
               >
                 <a
                   href={`#${id}`}
-                  className="text-slate-300 transition-colors group-hover:text-accent no-underline font-normal text-lg"
+                  className="text-edge-strong transition-colors group-hover:text-accent no-underline font-normal text-lg"
                   aria-label={`Link to ${rawText}`}
                 >
                   #
@@ -46,12 +46,12 @@ export function Markdown({ children }: { children: string }) {
             return (
               <h3
                 id={id}
-                className="group scroll-mt-24 mt-8 mb-4 flex items-center gap-2 font-display text-xl font-semibold tracking-tight text-slate-900"
+                className="group scroll-mt-24 mt-8 mb-4 flex items-center gap-2 font-display text-xl font-semibold tracking-tight text-ink"
                 {...props}
               >
                 <a
                   href={`#${id}`}
-                  className="text-slate-300 transition-colors group-hover:text-accent no-underline font-normal text-base"
+                  className="text-edge-strong transition-colors group-hover:text-accent no-underline font-normal text-base"
                   aria-label={`Link to ${rawText}`}
                 >
                   #
@@ -62,26 +62,26 @@ export function Markdown({ children }: { children: string }) {
           },
           blockquote: ({ children, ...props }) => (
             <blockquote
-              className="my-6 rounded-xl border border-blue-100 bg-blue-50/50 p-5 text-slate-700 italic border-l-4 border-l-accent text-[15.5px]"
+              className="my-6 rounded-xl border border-edge bg-accent-soft/60 p-5 text-body italic border-l-4 border-l-accent text-[15.5px]"
               {...props}
             >
               {children}
             </blockquote>
           ),
           table: ({ children, ...props }) => (
-            <div className="my-8 overflow-x-auto rounded-xl border border-slate-200 shadow-xs">
+            <div className="my-8 overflow-x-auto rounded-xl border border-edge ">
               <table className="w-full min-w-[500px] border-collapse text-left text-sm" {...props}>
                 {children}
               </table>
             </div>
           ),
           th: ({ children, ...props }) => (
-            <th className="border-b border-slate-200 bg-slate-50 px-4 py-3 font-semibold text-slate-800" {...props}>
+            <th className="border-b border-edge bg-panel px-4 py-3 font-semibold text-ink" {...props}>
               {children}
             </th>
           ),
           td: ({ children, ...props }) => (
-            <td className="border-b border-slate-100 px-4 py-3 text-slate-600" {...props}>
+            <td className="border-b border-line px-4 py-3 text-body" {...props}>
               {children}
             </td>
           ),
@@ -95,7 +95,7 @@ export function Markdown({ children }: { children: string }) {
             if (!hasLang && !isMultiLine) {
               return (
                 <code
-                  className="rounded-md border border-slate-200/70 bg-slate-100 px-1.5 py-0.5 font-mono text-[13px] font-medium text-slate-800"
+                  className="rounded-md border border-edge bg-accent-soft px-1.5 py-0.5 font-mono text-[13px] font-medium text-ink"
                   {...props}
                 >
                   {children}

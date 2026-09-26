@@ -6,6 +6,7 @@ import { getDb } from "@/db";
 import { settings } from "@/db/schema";
 import { requireAdmin } from "@/lib/auth";
 import { getSettings } from "@/lib/data";
+import { parseList } from "@/lib/utils";
 import { deleteIfReplaced } from "@/lib/storage";
 import { resolveFileField, uploadErrorMessage } from "@/lib/upload-field";
 import { firstError, formValues, optionalEmail, optionalUrl, required, text, type FormState } from "@/lib/validation";
@@ -39,7 +40,14 @@ export async function saveProfile(_state: FormState, formData: FormData): Promis
     const current = await getSettings();
     const photoUrl = await resolveFileField(formData, { file: "photo", remove: "removePhoto", current: current.photoUrl, folder: "profile" });
     const resumeUrl = await resolveFileField(formData, { file: "resume", remove: "removeResume", current: current.resumeUrl, folder: "documents", kind: "document" });
-    const values = { ...parsed.data, photoUrl, resumeUrl };
+    const highlights = parseList(formData.get("highlights"), /\n/)
+      .slice(0, 4)
+      .map((line) => {
+        const [value, ...rest] = line.split("|");
+        return { value: value.trim().slice(0, 16), label: rest.join("|").trim().slice(0, 60) };
+      })
+      .filter((item) => item.value && item.label);
+    const values = { ...parsed.data, photoUrl, resumeUrl, highlights };
 
     const db = await getDb();
     await db.insert(settings).values({ id: 1, ...values }).onConflictDoUpdate({ target: settings.id, set: values });

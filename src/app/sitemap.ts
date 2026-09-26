@@ -1,5 +1,5 @@
 import type { MetadataRoute } from "next";
-import { getPublishedPosts, getSettings } from "@/lib/data";
+import { getProjects, getPublishedPosts, getSettings } from "@/lib/data";
 import { siteUrl } from "@/lib/site";
 
 // Built from the database on request so new posts appear without a redeploy.
@@ -7,7 +7,7 @@ export const dynamic = "force-dynamic";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const base = siteUrl();
-  const [settings, posts] = await Promise.all([getSettings(), getPublishedPosts()]);
+  const [settings, posts, projects] = await Promise.all([getSettings(), getPublishedPosts(), getProjects({ publishedOnly: true })]);
   const latestPost = posts[0]?.updatedAt;
   const siteUpdated = [settings.updatedAt, latestPost].filter(Boolean).sort((a, b) => b!.getTime() - a!.getTime())[0];
 
@@ -20,5 +20,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: "yearly" as const,
       priority: 0.6,
     })),
+    ...projects
+      .filter((project) => project.body.trim())
+      .map((project) => ({
+        url: `${base}/projects/${project.slug}`,
+        lastModified: project.updatedAt,
+        changeFrequency: "yearly" as const,
+        priority: 0.7,
+      })),
   ];
 }

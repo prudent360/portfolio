@@ -2,13 +2,12 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, Calendar, Clock, Mail, MessageSquare, Tag, Bookmark } from "lucide-react";
-import { BlogNotice } from "@/components/blog/blog-notice";
 import { TableOfContents } from "@/components/blog/table-of-contents";
+import { ArrowLeft, MailIcon } from "@/components/icons";
 import { Markdown } from "@/components/markdown";
 import { getPublishedPost, getSettings } from "@/lib/data";
-import { extractToc } from "@/lib/toc";
 import { absoluteUrl, jsonLd, RSS_ALTERNATE } from "@/lib/site";
+import { extractToc } from "@/lib/toc";
 import { formatDate, fullName, readingTime } from "@/lib/utils";
 
 type Props = { params: Promise<{ slug: string }> };
@@ -19,7 +18,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   // Use the cover image when there is one, otherwise a generated card.
   const image = post.coverUrl ?? `/blog/${post.slug}/social-card`;
   return {
-    title: { absolute: `${post.title} | Ifiokobong Akpan` },
+    title: post.title,
     description: post.excerpt,
     alternates: { canonical: `/blog/${post.slug}`, types: RSS_ALTERNATE },
     openGraph: {
@@ -37,13 +36,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function PostPage({ params }: Props) {
   const { slug } = await params;
-  const [post, siteSettings] = await Promise.all([
-    getPublishedPost(slug),
-    getSettings(),
-  ]);
-
+  const [post, settings] = await Promise.all([getPublishedPost(slug), getSettings()]);
   if (!post) notFound();
 
+  const author = fullName(settings.firstName, settings.lastName);
+  const toc = extractToc(post.content);
+  const showToc = toc.length >= 2;
   const structuredData = {
     "@context": "https://schema.org",
     "@type": "BlogPosting",
@@ -55,152 +53,73 @@ export default async function PostPage({ params }: Props) {
     image: absoluteUrl(post.coverUrl ?? `/blog/${post.slug}/social-card`),
     url: absoluteUrl(`/blog/${post.slug}`),
     mainEntityOfPage: absoluteUrl(`/blog/${post.slug}`),
-    author: { "@type": "Person", name: fullName(siteSettings.firstName, siteSettings.lastName), url: absoluteUrl("/") },
+    author: { "@type": "Person", name: author, url: absoluteUrl("/") },
   };
 
-  const tocItems = extractToc(post.content);
-  const readTime = readingTime(post.content);
-
-  // Extract first word(s) and last word to add stylized italic flair like Fulfilera's titles
-  const titleWords = post.title.split(" ");
-  const mainTitle = titleWords.length > 1 ? titleWords.slice(0, -1).join(" ") : post.title;
-  const highlightWord = titleWords.length > 1 ? titleWords[titleWords.length - 1] : "";
-
   return (
-    <div className="min-h-screen bg-white pb-24">
+    <article>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd(structuredData) }} />
-      {/* Top Fulfilera-style Notice Banner */}
-      <BlogNotice
-        text="Data Engineering & Analytics Research — Written by Ifiokobong Akpan"
-        linkHref="/#about"
-        linkLabel="About author"
-      />
 
-      {/* Hero Section */}
-      <section className="border-b border-slate-100 bg-slate-50/50 py-12 sm:py-16 md:py-20">
-        <div className="mx-auto flex max-w-[1200px] flex-col gap-6 px-5 sm:px-8">
-          <Link
-            href="/blog"
-            className="inline-flex w-fit items-center gap-2 text-sm font-semibold text-slate-500 hover:text-accent transition-colors"
-          >
-            <ArrowLeft className="size-4" /> Back to all articles
+      <header className="border-b border-line bg-white">
+        <div className="mx-auto flex max-w-[1200px] flex-col gap-5 px-5 pb-12 pt-10 sm:px-8 md:pb-16 md:pt-14">
+          <Link href="/blog" className="flex w-fit items-center gap-2 text-[15px] font-semibold text-accent hover:text-accent-dark">
+            <ArrowLeft className="size-4" /> All posts
           </Link>
-
-          <div className="flex flex-col gap-4">
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3.5 py-1 text-xs font-semibold text-slate-700 shadow-xs">
-                <Bookmark className="size-3 text-accent" />
-                Technical Publication
-              </span>
-              {post.tags[0] && (
-                <span className="inline-flex items-center gap-1 rounded-full bg-accent-soft px-3 py-1 font-mono text-xs font-medium text-accent">
-                  <Tag className="size-3" />
-                  {post.tags[0]}
-                </span>
-              )}
-            </div>
-
-            <h1 className="font-display text-3xl font-extrabold tracking-tight text-slate-900 sm:text-4xl md:text-5xl lg:text-[54px] leading-[1.12]">
-              {mainTitle}{" "}
-              {highlightWord && <em className="italic font-serif font-normal text-accent">{highlightWord}</em>}
-            </h1>
-
-            {post.excerpt && (
-              <p className="max-w-3xl text-lg text-slate-600 sm:text-xl leading-relaxed">
-                {post.excerpt}
-              </p>
-            )}
-
-            <div className="mt-2 flex flex-wrap items-center gap-5 text-xs text-slate-500 font-medium border-t border-slate-200/60 pt-4">
-              <span className="inline-flex items-center gap-1.5">
-                <Calendar className="size-3.5 text-slate-400" />
-                Published: <strong className="text-slate-700">{formatDate(post.publishedAt)}</strong>
-              </span>
-              <span className="inline-flex items-center gap-1.5">
-                <Clock className="size-3.5 text-slate-400" />
-                ~{readTime}
-              </span>
-              <span className="text-slate-300">|</span>
-              <span className="text-slate-600">
-                Author: <strong className="text-slate-800">{siteSettings.firstName || "Ifiokobong"} {siteSettings.lastName || "Akpan"}</strong>
-              </span>
-            </div>
-          </div>
+          {post.tags.length > 0 && (
+            <ul className="flex flex-wrap gap-2" aria-label="Tags">
+              {post.tags.map((tag) => (
+                <li key={tag}>
+                  <Link href={`/blog?tag=${encodeURIComponent(tag)}`} className="rounded-full bg-accent-soft px-3 py-1 font-mono text-xs text-accent hover:bg-[#D9E0F8]">
+                    {tag}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          )}
+          <h1 className="max-w-[900px] font-display text-4xl font-semibold leading-[1.1] tracking-tight md:text-[52px]">{post.title}</h1>
+          {post.excerpt && <p className="max-w-[760px] text-xl leading-relaxed text-muted">{post.excerpt}</p>}
+          <p className="font-mono text-sm text-muted">
+            {author && <>{author}<span aria-hidden="true"> · </span></>}
+            <time dateTime={post.publishedAt?.toISOString()}>{formatDate(post.publishedAt)}</time>
+            <span aria-hidden="true"> · </span>
+            {readingTime(post.content)}
+          </p>
         </div>
-      </section>
+      </header>
 
-      {/* Main Content & Sidebar Grid */}
-      <div className="mx-auto max-w-[1200px] px-5 sm:px-8 py-10 md:py-14">
-        <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_320px] gap-12 lg:gap-16 items-start">
-          {/* Main Article Content */}
-          <main className="min-w-0 flex flex-col gap-8">
+      <div className="mx-auto max-w-[1200px] px-5 py-12 sm:px-8 md:py-16">
+        <div className={showToc ? "grid items-start gap-12 lg:grid-cols-[minmax(0,1fr)_280px] lg:gap-16" : "mx-auto max-w-[760px]"}>
+          {showToc && <TableOfContents items={toc} />}
+          <div className={`flex min-w-0 flex-col gap-10 ${showToc ? "lg:order-first" : ""}`}>
             {post.coverUrl && (
-              <div className="relative aspect-[16/9] w-full overflow-hidden rounded-2xl border border-slate-200 bg-slate-100 shadow-sm">
-                <Image
-                  src={post.coverUrl}
-                  alt={post.title}
-                  fill
-                  priority
-                  sizes="(min-width: 1200px) 800px, 100vw"
-                  className="object-cover"
-                />
+              <div className="relative aspect-[16/9] overflow-hidden rounded-[14px] border border-edge bg-accent-soft">
+                <Image src={post.coverUrl} alt="" fill priority sizes="(min-width: 1200px) 820px, 100vw" className="object-cover" />
               </div>
             )}
-
-            {/* Abstract Info Callout Box (Fulfilera style infoBox) */}
-            {post.excerpt && (
-              <div className="rounded-xl border border-slate-200 bg-slate-50/70 p-5 text-sm sm:text-base text-slate-700 leading-relaxed">
-                <p>
-                  <strong>Executive Summary:</strong> {post.excerpt} This case note outlines real-world architecture patterns, trade-offs, and implementation details for scalable data systems.
-                </p>
-              </div>
-            )}
-
-            {/* Markdown Body */}
             <Markdown>{post.content}</Markdown>
 
-            {/* Bottom Support / Discussion Callout Box */}
-            <div className="mt-8 rounded-2xl border border-slate-200 bg-slate-50/80 p-6 sm:p-8 flex flex-col sm:flex-row items-start sm:items-center gap-6 shadow-xs">
-              <div className="flex size-14 shrink-0 items-center justify-center rounded-xl bg-white border border-slate-200 text-accent shadow-xs">
-                <MessageSquare className="size-6" />
+            <aside className="flex flex-col gap-5 rounded-[14px] border border-edge bg-panel p-6 sm:flex-row sm:items-center sm:justify-between sm:p-8">
+              <div className="flex flex-col gap-1.5">
+                <h2 className="font-display text-xl font-semibold">Want to talk about this?</h2>
+                <p className="text-[15px] leading-relaxed text-muted">{settings.contactText || "Questions, ideas or a project in mind are all welcome."}</p>
               </div>
-              <div className="flex grow flex-col gap-1.5">
-                <h3 className="font-display text-lg font-bold text-slate-900">
-                  Questions or ideas about this architecture?
-                </h3>
-                <p className="text-sm text-slate-600 leading-relaxed">
-                  I enjoy discussing modern data pipelines, analytics engineering, and business intelligence strategy.
-                </p>
-              </div>
-              <a
-                href={`mailto:${siteSettings.email || "contact@ifiokobong.com"}?subject=${encodeURIComponent(`Regarding: ${post.title}`)}`}
-                className="shrink-0 inline-flex h-11 items-center justify-center gap-2 rounded-lg bg-accent px-5 text-sm font-semibold text-white hover:bg-accent-dark transition-colors"
-              >
-                <Mail className="size-4" /> Start Discussion →
-              </a>
-            </div>
+              {settings.email ? (
+                <a href={`mailto:${settings.email}?subject=${encodeURIComponent(`About: ${post.title}`)}`} className="inline-flex h-12 shrink-0 items-center justify-center gap-2 rounded-lg bg-accent px-6 font-semibold text-white hover:bg-accent-dark">
+                  <MailIcon className="size-[18px]" /> Email me
+                </a>
+              ) : (
+                <Link href="/#contact" className="inline-flex h-12 shrink-0 items-center justify-center rounded-lg bg-accent px-6 font-semibold text-white hover:bg-accent-dark">
+                  Get in touch
+                </Link>
+              )}
+            </aside>
 
-            {/* Author Attribution Card */}
-            <div className="mt-4 flex items-center justify-between border-t border-slate-200 pt-6 text-sm text-slate-500">
-              <Link
-                href="/blog"
-                className="inline-flex items-center gap-1.5 font-semibold text-accent hover:text-accent-dark"
-              >
-                <ArrowLeft className="size-4" /> Explore more articles
-              </Link>
-              <Link
-                href="/#contact"
-                className="font-semibold text-slate-700 hover:text-accent"
-              >
-                Contact Ifiokobong →
-              </Link>
-            </div>
-          </main>
-
-          {/* Right Sticky Sidebar */}
-          <TableOfContents items={tocItems} />
+            <Link href="/blog" className="flex w-fit items-center gap-2 text-[15px] font-semibold text-accent hover:text-accent-dark">
+              <ArrowLeft className="size-4" /> More posts
+            </Link>
+          </div>
         </div>
       </div>
-    </div>
+    </article>
   );
 }

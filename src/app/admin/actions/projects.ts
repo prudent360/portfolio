@@ -18,6 +18,7 @@ const schema = z.object({
   slug: text(80),
   category: text(60),
   description: required("Description", 600),
+  body: text(100_000),
   thumbnail: z.enum(THUMBNAILS).catch("flow"),
   liveUrl: optionalUrl,
   githubUrl: optionalUrl,

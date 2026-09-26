@@ -42,15 +42,15 @@ export function CodeBlock({
   };
 
   return (
-    <div className="not-prose my-6 overflow-hidden rounded-xl border border-slate-800 bg-[#0f172a] shadow-md">
+    <div className="not-prose my-6 overflow-hidden rounded-xl border border-navy bg-navy">
       {/* Code Header Bar */}
-      <div className="flex h-10 items-center justify-between border-b border-slate-800/80 bg-[#1e293b]/70 px-4">
+      <div className="flex h-10 items-center justify-between border-b border-navy-soft bg-navy-soft/60 px-4">
         <div className="flex items-center gap-2">
-          <span className="size-2.5 rounded-full bg-slate-600/70" />
-          <span className="size-2.5 rounded-full bg-slate-600/70" />
-          <span className="size-2.5 rounded-full bg-slate-600/70" />
+          <span className="size-2.5 rounded-full bg-[#3B4A86]" />
+          <span className="size-2.5 rounded-full bg-[#3B4A86]" />
+          <span className="size-2.5 rounded-full bg-[#3B4A86]" />
           {language && (
-            <span className="ml-2 font-mono text-xs font-semibold uppercase tracking-wider text-slate-400">
+            <span className="ml-2 font-mono text-xs font-semibold uppercase tracking-wider text-accent-muted">
               {language}
             </span>
           )}
@@ -59,7 +59,7 @@ export function CodeBlock({
         <button
           type="button"
           onClick={handleCopy}
-          className="inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-medium text-slate-300 transition-colors hover:bg-slate-700 hover:text-white"
+          className="inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-medium text-[#C4C9D4] transition-colors hover:bg-navy-soft hover:text-white"
           aria-label={copied ? "Copied to clipboard" : "Copy code"}
         >
           {copied ? (
@@ -77,8 +77,8 @@ export function CodeBlock({
       </div>
 
       {/* Code Text Body */}
-      <pre className="overflow-x-auto p-4 sm:p-5 font-mono text-[13.5px] leading-relaxed text-[#f8fafc] selection:bg-slate-700">
-        <code className="text-[#f8fafc] font-mono block whitespace-pre" {...props}>
+      <pre className="overflow-x-auto p-4 sm:p-5 font-mono text-[13.5px] leading-relaxed text-[#E8ECFB] selection:bg-navy-soft">
+        <code className="text-[#E8ECFB] font-mono block whitespace-pre" {...props}>
           {children}
         </code>
       </pre>

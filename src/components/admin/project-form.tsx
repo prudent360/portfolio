@@ -1,5 +1,6 @@
 import { ActionForm, Checkbox, FileField, Input, Select, SubmitButton, Textarea } from "@/components/admin/forms";
 import { Panel } from "@/components/admin/ui";
+import { WysiwygEditor } from "@/components/admin/wysiwyg-editor";
 import type { Project } from "@/db/schema";
 import type { FormState } from "@/lib/validation";
 
@@ -19,8 +20,11 @@ export function ProjectForm({ action, project, categories }: { action: (s: FormS
           <datalist id="project-categories">{categories.map((c) => <option key={c} value={c} />)}</datalist>
           <Input label="Slug" name="slug" defaultValue={project?.slug} hint="Leave empty to create one from the title." />
         </div>
-        <Textarea label="Description" name="description" defaultValue={project?.description} rows={4} required />
+        <Textarea label="Summary" name="description" defaultValue={project?.description} rows={3} required hint="Shown on the project card." />
         <Input label="Tags" name="tags" defaultValue={project?.tags.join(", ")} hint="Comma separated, for example Python, BigQuery, SQL." />
+      </Panel>
+      <Panel title="Case study" description="Optional. When you write one, the project gets its own page and the card links to it. Cover the problem, your approach, the stack and the results.">
+        <WysiwygEditor name="body" label="Case study" defaultValue={project?.body} />
       </Panel>
       <Panel title="Links">
         <div className="grid gap-5 sm:grid-cols-2">

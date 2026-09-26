@@ -26,6 +26,14 @@ export default async function ProfilePage() {
           <Input label="Eyebrow" name="eyebrow" defaultValue={s.eyebrow} hint="Small line above the headline." />
           <Input label="Headline" name="headline" defaultValue={s.headline} required />
           <Textarea label="Intro" name="intro" defaultValue={s.intro} rows={3} />
+          <Textarea
+            label="Proof points"
+            name="highlights"
+            defaultValue={s.highlights.map((h) => `${h.value} | ${h.label}`).join("\n")}
+            rows={4}
+            placeholder={"5+ | years in data\n30+ | pipelines shipped"}
+            hint="Up to 4 lines, each as “number | label”. Shown under the hero buttons. Use real figures only; leave empty to hide."
+          />
         </Panel>
         <Panel title="About">
           <Textarea label="About me" name="about" defaultValue={s.about} rows={8} hint="Leave a blank line between paragraphs." />

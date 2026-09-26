@@ -35,9 +35,10 @@ type MarkdownStorage = { markdown?: { getMarkdown: () => string } };
 interface WysiwygEditorProps {
   name: string;
   defaultValue?: string;
+  label?: string;
 }
 
-export function WysiwygEditor({ name, defaultValue = "" }: WysiwygEditorProps) {
+export function WysiwygEditor({ name, defaultValue = "", label = "Content" }: WysiwygEditorProps) {
   const id = useId();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [mode, setMode] = useState<"wysiwyg" | "markdown">("wysiwyg");
@@ -153,7 +154,7 @@ export function WysiwygEditor({ name, defaultValue = "" }: WysiwygEditorProps) {
     <div className="flex flex-col gap-2">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <label htmlFor={id} className="text-sm font-semibold text-ink">
-          Content
+          {label}
         </label>
 
         {/* View mode switcher */}

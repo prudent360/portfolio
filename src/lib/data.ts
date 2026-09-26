@@ -7,7 +7,7 @@ import { education, experiences, posts, projects, settings, skillGroups, type Se
 const EMPTY_SETTINGS: Settings = {
   id: 1, firstName: "", lastName: "", brand: "", role: "", location: "", eyebrow: "", headline: "",
   intro: "", about: "", photoUrl: null, resumeUrl: null, email: "", linkedinUrl: "", githubUrl: "",
-  contactEyebrow: "", contactHeading: "", contactText: "", footerTagline: "", seoDescription: "",
+  contactEyebrow: "", contactHeading: "", contactText: "", footerTagline: "", seoDescription: "", highlights: [],
   createdAt: new Date(0), updatedAt: new Date(0),
 };
 
@@ -30,6 +30,15 @@ export async function getProjects({ publishedOnly }: { publishedOnly: boolean })
     .where(publishedOnly ? eq(projects.published, true) : undefined)
     .orderBy(asc(projects.sortOrder), asc(projects.id));
 }
+
+export const getPublishedProject = cache(async (slug: string) => {
+  const db = await getDb();
+  const [row] = await db
+    .select()
+    .from(projects)
+    .where(and(eq(projects.slug, slug), eq(projects.published, true)));
+  return row ?? null;
+});
 
 export async function getExperiences() {
   const db = await getDb();

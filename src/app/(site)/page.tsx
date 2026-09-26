@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { BriefcaseIcon, CapIcon, SkillIcon, WARM_ICONS, type SkillIconKey } from "@/components/icons";
+import { BriefcaseIcon, CapIcon, DownloadIcon, SkillIcon, WARM_ICONS, type SkillIconKey } from "@/components/icons";
 import { CornerShapes, PipelineDiagram } from "@/components/site/illustrations";
 import { PostCard } from "@/components/site/post-card";
 import { ProjectsGrid } from "@/components/site/projects-grid";
@@ -60,13 +60,29 @@ export default async function HomePage() {
             <div className="mt-4 flex flex-wrap gap-4">
               <a href="#projects" className="flex h-13 items-center rounded-lg bg-accent px-8 text-base font-semibold text-white hover:bg-accent-dark">View Projects</a>
               <a href="#contact" className="flex h-13 items-center rounded-lg border-[1.5px] border-accent bg-white px-8 text-base font-semibold text-accent hover:bg-accent-soft">Contact Me</a>
+              {settings.resumeUrl && (
+                <a href={settings.resumeUrl} target="_blank" rel="noopener noreferrer" className="flex h-13 items-center gap-2 px-2 text-base font-semibold text-accent hover:text-accent-dark">
+                  <DownloadIcon className="size-[18px]" /> Download CV
+                </a>
+              )}
             </div>
+            {settings.highlights.length > 0 && (
+              <dl className="mt-6 grid grid-cols-2 gap-x-8 gap-y-5 border-t border-edge-strong pt-7 sm:grid-cols-4">
+                {settings.highlights.map((item) => (
+                  <div key={`${item.value}-${item.label}`} className="flex flex-col-reverse justify-end gap-1">
+                    <dt className="text-sm leading-snug text-muted">{item.label}</dt>
+                    <dd className="font-display text-3xl font-semibold tracking-tight text-ink">{item.value}</dd>
+                  </div>
+                ))}
+              </dl>
+            )}
           </div>
           <div className="flex justify-center">
             <PipelineDiagram className="h-auto w-full max-w-[560px]" />
           </div>
         </div>
-        <CornerShapes className="absolute bottom-0 left-0 hidden w-[260px] md:block" />
+        {/* Decorative; only shown when the side margin is wide enough not to touch the content. */}
+        <CornerShapes className="pointer-events-none absolute bottom-0 left-0 z-0 hidden w-[170px] min-[1560px]:block" />
       </section>
 
       {/* Skills */}
@@ -107,6 +123,7 @@ export default async function HomePage() {
             projects={projects.map((p) => ({
               id: p.id, title: p.title, category: p.category, description: p.description, tags: p.tags,
               thumbnail: p.thumbnail, imageUrl: p.imageUrl, liveUrl: p.liveUrl, githubUrl: p.githubUrl,
+              href: p.body.trim() ? `/projects/${p.slug}` : null,
             }))}
           />
         </section>

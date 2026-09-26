@@ -57,6 +57,8 @@ export const settings = pgTable("settings", {
   contactText: text("contact_text").notNull().default(""),
   footerTagline: text("footer_tagline").notNull().default(""),
   seoDescription: text("seo_description").notNull().default(""),
+  /** Proof points shown under the hero, for example { value: "40+", label: "pipelines shipped" }. */
+  highlights: jsonb("highlights").$type<{ value: string; label: string }[]>().notNull().default([]),
   ...timestamps,
 });
 
@@ -75,6 +77,8 @@ export const projects = pgTable("projects", {
   slug: text("slug").notNull().unique(),
   category: text("category").notNull().default(""),
   description: text("description").notNull().default(""),
+  /** Optional Markdown case study. When present the project gets its own page. */
+  body: text("body").notNull().default(""),
   tags: jsonb("tags").$type<string[]>().notNull().default([]),
   thumbnail: text("thumbnail").notNull().default("flow"),
   imageUrl: text("image_url"),
