@@ -19,6 +19,14 @@ const DOCUMENT_TYPES: Record<string, string> = { "application/pdf": "pdf" };
 
 export class UploadError extends Error {}
 
+/**
+ * True when a Vercel Blob store is connected. Older stores provide BLOB_READ_WRITE_TOKEN;
+ * newer ones provide BLOB_STORE_ID and authenticate with the deployment's OIDC token.
+ */
+export function blobConfigured(): boolean {
+  return Boolean(process.env.BLOB_READ_WRITE_TOKEN || process.env.BLOB_STORE_ID);
+}
+
 /** True when a form's file input was left empty. */
 export function isEmptyFile(value: FormDataEntryValue | null): boolean {
   return !value || typeof value === "string" || value.size === 0;
@@ -26,7 +34,7 @@ export function isEmptyFile(value: FormDataEntryValue | null): boolean {
 
 /**
  * Stores an uploaded file and returns its public URL.
- * Uses Vercel Blob when BLOB_READ_WRITE_TOKEN is set, otherwise .data/uploads/ (local only).
+ * Uses Vercel Blob when a store is connected, otherwise .data/uploads/ (local only).
  */
 export async function saveUpload(
   file: File,
@@ -42,10 +50,16 @@ export async function saveUpload(
 
   const name = `${folder}/${randomUUID()}.${ext}`;
 
-  if (process.env.BLOB_READ_WRITE_TOKEN) {
+  if (blobConfigured()) {
     const { put } = await import("@vercel/blob");
-    const blob = await put(name, file, { access: "public", contentType: file.type });
-    return blob.url;
+    try {
+      const blob = await put(name, file, { access: "public", contentType: file.type });
+      return blob.url;
+    } catch (error) {
+      console.error("Blob upload failed", error);
+      const detail = error instanceof Error ? error.message : String(error);
+      throw new UploadError(`The upload was rejected by Vercel Blob: ${detail}`);
+    }
   }
 
   if (process.env.VERCEL) {
@@ -67,7 +81,7 @@ export async function deleteUpload(url: string | null | undefined): Promise<void
     if (url.startsWith("/uploads/")) {
       const target = path.resolve(LOCAL_UPLOAD_DIR, url.slice("/uploads/".length));
       if (target.startsWith(LOCAL_UPLOAD_DIR + path.sep)) await unlink(target);
-    } else if (process.env.BLOB_READ_WRITE_TOKEN && new URL(url).hostname.endsWith(".public.blob.vercel-storage.com")) {
+    } else if (blobConfigured() && new URL(url).hostname.endsWith(".blob.vercel-storage.com")) {
       const { del } = await import("@vercel/blob");
       await del(url);
     }
