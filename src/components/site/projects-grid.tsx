@@ -17,17 +17,27 @@ export type PublicProject = {
   imageUrl: string | null;
   liveUrl: string | null;
   githubUrl: string | null;
-  /** Set when the project has a case study page. */
+  /** Set when the project has its own page. */
   href: string | null;
+  hasCaseStudy: boolean;
+  /** Tool name when the project has an interactive embed, e.g. "Power BI". */
+  embedProvider: string | null;
 };
 
-function Artwork({ project, sizes, className }: { project: PublicProject; sizes: string; className: string }) {
+const detailLabel = (p: PublicProject) => (p.hasCaseStudy ? "Read the case study" : p.embedProvider ? "Explore the dashboard" : "View project");
+
+function Artwork({ project, sizes, className, badge = true }: { project: PublicProject; sizes: string; className: string; badge?: boolean }) {
   return (
     <div className={`relative overflow-hidden bg-navy ${className}`}>
       {project.imageUrl ? (
         <Image src={project.imageUrl} alt="" fill sizes={sizes} className="object-cover" />
       ) : (
         <ProjectThumbnail kind={project.thumbnail} />
+      )}
+      {badge && project.embedProvider && (
+        <span className="absolute bottom-3 left-3 inline-flex items-center gap-1.5 rounded-md bg-white/95 px-2.5 py-1 font-mono text-[11px] font-medium text-ink">
+          <span className="size-1.5 rounded-full bg-emerald-500" aria-hidden="true" /> Interactive · {project.embedProvider}
+        </span>
       )}
     </div>
   );
@@ -65,7 +75,7 @@ function FeaturedCard({ project, flip }: { project: PublicProject; flip: boolean
           <div className="mt-auto flex flex-wrap gap-3 pt-3">
             {project.href && (
               <Link href={project.href} className="inline-flex h-12 items-center gap-2 rounded-lg bg-accent px-6 font-semibold text-white hover:bg-accent-dark">
-                Read the case study<span className="sr-only">: {project.title}</span> <ArrowUpRight className="size-4" />
+                {detailLabel(project)}<span className="sr-only">: {project.title}</span> <ArrowUpRight className="size-4" />
               </Link>
             )}
             {project.liveUrl && (
@@ -88,13 +98,18 @@ function FeaturedCard({ project, flip }: { project: PublicProject; flip: boolean
 function ProjectRow({ project }: { project: PublicProject }) {
   return (
     <li className="grid gap-4 py-6 first:pt-0 last:pb-0 sm:grid-cols-[120px_minmax(0,1fr)] sm:gap-6">
-      <Artwork project={project} sizes="120px" className="hidden aspect-[3/2] rounded-lg sm:block" />
+      <Artwork project={project} sizes="120px" className="hidden aspect-[3/2] rounded-lg sm:block" badge={false} />
       <div className="flex min-w-0 flex-col gap-2.5">
         <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
           <h4 className="font-display text-xl font-semibold leading-snug text-ink">
             {project.href ? <Link href={project.href} className="hover:text-accent">{project.title}</Link> : project.title}
           </h4>
           {project.category && <span className="font-mono text-xs uppercase tracking-[1.5px] text-muted">{project.category}</span>}
+          {project.embedProvider && (
+            <span className="inline-flex items-center gap-1.5 font-mono text-xs uppercase tracking-[1.5px] text-emerald-800">
+              <span className="size-1.5 rounded-full bg-emerald-500" aria-hidden="true" /> Interactive
+            </span>
+          )}
         </div>
         <p className="text-[15px] leading-relaxed text-muted">{project.description}</p>
         {project.outcome && <p className="text-[15px] font-semibold text-ink">{project.outcome}</p>}
@@ -102,7 +117,7 @@ function ProjectRow({ project }: { project: PublicProject }) {
           <Tags tags={project.tags} small />
           {(project.href || project.liveUrl || project.githubUrl) && (
             <div className="flex flex-wrap gap-4 text-[15px] font-semibold text-accent">
-              {project.href && <Link href={project.href} className="inline-flex items-center gap-1 hover:text-accent-dark">Case study<span className="sr-only">: {project.title}</span> <ArrowUpRight className="size-4" /></Link>}
+              {project.href && <Link href={project.href} className="inline-flex items-center gap-1 hover:text-accent-dark">{project.hasCaseStudy ? "Case study" : project.embedProvider ? "Dashboard" : "Details"}<span className="sr-only">: {project.title}</span> <ArrowUpRight className="size-4" /></Link>}
               {project.liveUrl && <a href={project.liveUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 hover:text-accent-dark">Demo<span className="sr-only"> of {project.title}</span> <ExternalIcon className="size-3.5" /></a>}
               {project.githubUrl && <a href={project.githubUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 hover:text-accent-dark">GitHub<span className="sr-only"> for {project.title}</span> <ExternalIcon className="size-3.5" /></a>}
             </div>

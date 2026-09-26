@@ -4,11 +4,11 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 const LINKS = [
-  { href: "/", label: "Home", match: (p: string) => p === "/" },
+  { href: "/#about", label: "About" },
+  { href: "/#experience", label: "Experience" },
   { href: "/#skills", label: "Skills" },
   { href: "/#projects", label: "Projects", match: (p: string) => p.startsWith("/projects") },
   { href: "/blog", label: "Blog", match: (p: string) => p.startsWith("/blog") },
-  { href: "/#about", label: "About" },
   { href: "/#contact", label: "Contact" },
 ];
 

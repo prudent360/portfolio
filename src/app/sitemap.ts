@@ -1,5 +1,6 @@
 import type { MetadataRoute } from "next";
 import { getProjects, getPublishedPosts, getSettings } from "@/lib/data";
+import { hasProjectPage } from "@/lib/projects";
 import { siteUrl } from "@/lib/site";
 
 // Built from the database on request so new posts appear without a redeploy.
@@ -21,7 +22,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.6,
     })),
     ...projects
-      .filter((project) => project.body.trim())
+      .filter(hasProjectPage)
       .map((project) => ({
         url: `${base}/projects/${project.slug}`,
         lastModified: project.updatedAt,

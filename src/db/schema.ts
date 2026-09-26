@@ -84,6 +84,12 @@ export const projects = pgTable("projects", {
   imageUrl: text("image_url"),
   liveUrl: text("live_url"),
   githubUrl: text("github_url"),
+  /** Public embed URL for an interactive dashboard or app (Power BI, Tableau, Streamlit, ...). */
+  embedUrl: text("embed_url"),
+  /** Extra screenshots shown in a gallery on the project page. */
+  gallery: jsonb("gallery").$type<string[]>().notNull().default([]),
+  /** Extra labelled links, in addition to the live demo and GitHub links. */
+  links: jsonb("links").$type<{ label: string; url: string }[]>().notNull().default([]),
   published: boolean("published").notNull().default(true),
   /** Shown as a large showcase card at the top of the projects section. */
   featured: boolean("featured").notNull().default(false),
@@ -100,6 +106,9 @@ export const experiences = pgTable("experiences", {
   /** "YYYY-MM" strings; a null end date means "Present". */
   startDate: text("start_date"),
   endDate: text("end_date"),
+  /** Optional, e.g. "Remote" or "Hull, UK". */
+  location: text("location").notNull().default(""),
+  /** One achievement per line; shown as bullet points. */
   description: text("description").notNull().default(""),
   sortOrder: integer("sort_order").notNull().default(0),
   ...timestamps,

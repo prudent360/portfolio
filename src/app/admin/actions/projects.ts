@@ -10,6 +10,7 @@ import { THUMBNAILS } from "@/components/site/illustrations";
 import { requireAdmin } from "@/lib/auth";
 import { deleteIfReplaced, deleteUpload } from "@/lib/storage";
 import { resolveFileField, uploadErrorMessage } from "@/lib/upload-field";
+import { parseEmbed } from "@/lib/embed";
 import { parseList, slugify } from "@/lib/utils";
 import { firstError, formValues, nullIfEmpty, optionalUrl, required, sortValue, text, type FormState } from "@/lib/validation";
 
@@ -26,6 +27,44 @@ const schema = z.object({
   sortOrder: sortValue,
 });
 
+const MAX_GALLERY = 12;
+const MAX_LINKS = 8;
+
+/** Gallery images come from the upload endpoint, so only accept URLs it can produce. */
+function isUploadedImage(url: string): boolean {
+  if (url.startsWith("/uploads/")) return true;
+  try {
+    return new URL(url).hostname.endsWith(".blob.vercel-storage.com");
+  } catch {
+    return false;
+  }
+}
+
+function parseGallery(formData: FormData): string[] {
+  try {
+    const value = JSON.parse(String(formData.get("gallery") ?? "[]"));
+    if (!Array.isArray(value)) return [];
+    return Array.from(new Set(value.filter((v): v is string => typeof v === "string" && isUploadedImage(v)))).slice(0, MAX_GALLERY);
+  } catch {
+    return [];
+  }
+}
+
+function parseLinks(formData: FormData): { links: { label: string; url: string }[]; error?: string } {
+  const labels = formData.getAll("linkLabel").map((v) => String(v).trim());
+  const urls = formData.getAll("linkUrl").map((v) => String(v).trim());
+  const links: { label: string; url: string }[] = [];
+  for (let i = 0; i < Math.max(labels.length, urls.length); i++) {
+    const label = (labels[i] ?? "").slice(0, 60);
+    const url = urls[i] ?? "";
+    if (!label && !url) continue;
+    if (!label || !url) return { links, error: "Each extra link needs both a label and a URL." };
+    if (!optionalUrl.safeParse(url).success) return { links, error: `The link “${label}” must start with http:// or https://` };
+    links.push({ label, url });
+  }
+  return { links: links.slice(0, MAX_LINKS) };
+}
+
 async function save(id: number | null, formData: FormData): Promise<FormState | number> {
   await requireAdmin();
   const parsed = schema.safeParse(formValues(formData));
@@ -33,6 +72,12 @@ async function save(id: number | null, formData: FormData): Promise<FormState | 
 
   const slug = slugify(parsed.data.slug || parsed.data.title);
   if (!slug) return { error: "Add a title with letters or numbers." };
+
+  const { embed, error: embedError } = parseEmbed(String(formData.get("embedUrl") ?? ""));
+  if (embedError) return { error: embedError };
+  const { links, error: linksError } = parseLinks(formData);
+  if (linksError) return { error: linksError };
+  const gallery = parseGallery(formData);
 
   const db = await getDb();
   const clash = await db
@@ -62,11 +107,15 @@ async function save(id: number | null, formData: FormData): Promise<FormState | 
     published: formData.get("published") === "on",
     featured: formData.get("featured") === "on",
     imageUrl,
+    embedUrl: embed?.url ?? null,
+    gallery,
+    links,
   };
 
   if (id) {
     await db.update(projects).set(values).where(eq(projects.id, id));
     await deleteIfReplaced(existing?.imageUrl, imageUrl);
+    for (const url of existing?.gallery ?? []) if (!gallery.includes(url)) await deleteUpload(url);
     revalidatePath("/", "layout");
     return id;
   }
@@ -88,8 +137,12 @@ export async function updateProject(id: number, _state: FormState, formData: For
 
 export async function deleteProject(id: number): Promise<void> {
   await requireAdmin();
-  const [removed] = await (await getDb()).delete(projects).where(eq(projects.id, id)).returning({ imageUrl: projects.imageUrl });
+  const [removed] = await (await getDb())
+    .delete(projects)
+    .where(eq(projects.id, id))
+    .returning({ imageUrl: projects.imageUrl, gallery: projects.gallery });
   await deleteUpload(removed?.imageUrl);
+  for (const url of removed?.gallery ?? []) await deleteUpload(url);
   revalidatePath("/", "layout");
   redirect("/admin/projects");
 }

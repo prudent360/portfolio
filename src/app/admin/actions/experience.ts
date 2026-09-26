@@ -14,7 +14,8 @@ const experienceSchema = z
     company: required("Company", 120),
     startDate: monthValue,
     endDate: monthValue,
-    description: text(1000),
+    location: text(80),
+    description: text(2000),
     sortOrder: sortValue,
   })
   .refine((v) => !v.startDate || !v.endDate || v.startDate <= v.endDate, "The end date must be after the start date.");

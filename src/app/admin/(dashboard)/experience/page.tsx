@@ -19,7 +19,15 @@ function ExperienceFields({ job }: { job?: Experience }) {
         <Input label="End month" name="endDate" type="month" defaultValue={job?.endDate ?? ""} hint="Ignored when “Current role” is ticked." />
       </div>
       <Checkbox label="Current role" name="current" defaultChecked={job ? !job.endDate : false} hint="Shows “Present” as the end date." />
-      <Textarea label="Summary" name="description" defaultValue={job?.description} rows={2} hint="Optional one or two lines under the role." />
+      <Input label="Location" name="location" defaultValue={job?.location} placeholder="Remote, or Hull, UK" hint="Optional. Shown next to the dates." />
+      <Textarea
+        label="Achievements"
+        name="description"
+        defaultValue={job?.description}
+        rows={4}
+        placeholder={"Built a GA4 to BigQuery pipeline used by 5 teams\nCut weekly reporting time from 6 hours to 20 minutes"}
+        hint="One achievement per line; each line shows as a bullet point, like on a CV. Start with a verb and include a result where you can."
+      />
       <Input label="Order" name="sortOrder" type="number" defaultValue={job?.sortOrder ?? 0} className="max-w-[160px]" />
     </>
   );
