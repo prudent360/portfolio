@@ -66,7 +66,8 @@ export const skillGroups = pgTable("skill_groups", {
   id: serial("id").primaryKey(),
   title: text("title").notNull(),
   icon: text("icon").notNull().default("code"),
-  items: jsonb("items").$type<string[]>().notNull().default([]),
+  /** Skills in the group. Older rows store plain strings; see normalizeSkillItems. */
+  items: jsonb("items").$type<(string | SkillItem)[]>().notNull().default([]),
   sortOrder: integer("sort_order").notNull().default(0),
   ...timestamps,
 });
@@ -108,6 +109,7 @@ export const experiences = pgTable("experiences", {
   endDate: text("end_date"),
   /** Optional, e.g. "Remote" or "Hull, UK". */
   location: text("location").notNull().default(""),
+  logoUrl: text("logo_url"),
   /** One achievement per line; shown as bullet points. */
   description: text("description").notNull().default(""),
   sortOrder: integer("sort_order").notNull().default(0),
@@ -120,6 +122,21 @@ export const education = pgTable("education", {
   institution: text("institution").notNull().default(""),
   startYear: text("start_year"),
   endYear: text("end_year"),
+  logoUrl: text("logo_url"),
+  sortOrder: integer("sort_order").notNull().default(0),
+  ...timestamps,
+});
+
+export const certifications = pgTable("certifications", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  issuer: text("issuer").notNull().default(""),
+  /** "YYYY-MM" strings. */
+  issueDate: text("issue_date"),
+  expiryDate: text("expiry_date"),
+  credentialId: text("credential_id").notNull().default(""),
+  credentialUrl: text("credential_url"),
+  logoUrl: text("logo_url"),
   sortOrder: integer("sort_order").notNull().default(0),
   ...timestamps,
 });
@@ -137,9 +154,19 @@ export const posts = pgTable("posts", {
   ...timestamps,
 });
 
+/** A skill with an optional icon reference (see lib/tech-icons). */
+export type SkillItem = { name: string; icon?: string };
+
+export function normalizeSkillItems(items: (string | SkillItem)[]): SkillItem[] {
+  return items
+    .map((item) => (typeof item === "string" ? { name: item } : item))
+    .filter((item) => item && typeof item.name === "string" && item.name.trim());
+}
+
 export type Settings = typeof settings.$inferSelect;
 export type SkillGroup = typeof skillGroups.$inferSelect;
 export type Project = typeof projects.$inferSelect;
 export type Experience = typeof experiences.$inferSelect;
 export type Education = typeof education.$inferSelect;
 export type Post = typeof posts.$inferSelect;
+export type Certification = typeof certifications.$inferSelect;

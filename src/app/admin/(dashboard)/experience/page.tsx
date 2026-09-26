@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import {
   createEducation, createExperience, deleteEducation, deleteExperience, updateEducation, updateExperience,
 } from "@/app/admin/actions/experience";
-import { ActionForm, Checkbox, DeleteButton, Input, SubmitButton, Textarea } from "@/components/admin/forms";
+import { ActionForm, Checkbox, DeleteButton, FileField, Input, SubmitButton, Textarea } from "@/components/admin/forms";
 import { PageHeader, Panel } from "@/components/admin/ui";
 import type { Education, Experience } from "@/db/schema";
 import { getEducation, getExperiences } from "@/lib/data";
@@ -19,6 +19,7 @@ function ExperienceFields({ job }: { job?: Experience }) {
         <Input label="End month" name="endDate" type="month" defaultValue={job?.endDate ?? ""} hint="Ignored when “Current role” is ticked." />
       </div>
       <Checkbox label="Current role" name="current" defaultChecked={job ? !job.endDate : false} hint="Shows “Present” as the end date." />
+      <FileField label="Company logo" name="logo" current={job?.logoUrl} removeName="removeLogo" hint="Optional. A square PNG or JPG works best. Without one, the company's first letter is shown." />
       <Input label="Location" name="location" defaultValue={job?.location} placeholder="Remote, or Hull, UK" hint="Optional. Shown next to the dates." />
       <Textarea
         label="Achievements"
@@ -37,6 +38,7 @@ function EducationFields({ item }: { item?: Education }) {
   return (
     <div className="grid gap-5 sm:grid-cols-2">
       <Input label="Degree" name="degree" defaultValue={item?.degree} required className="sm:col-span-2" />
+      <div className="sm:col-span-2"><FileField label="Institution logo" name="logo" current={item?.logoUrl} removeName="removeLogo" hint="Optional. A square PNG or JPG works best." /></div>
       <Input label="Institution" name="institution" defaultValue={item?.institution} className="sm:col-span-2" />
       <Input label="Start year" name="startYear" inputMode="numeric" pattern="\d{4}" defaultValue={item?.startYear ?? ""} />
       <Input label="End year" name="endYear" inputMode="numeric" pattern="\d{4}" defaultValue={item?.endYear ?? ""} />

@@ -43,6 +43,13 @@
       "when": 1790418921978,
       "tag": "0005_experience_location",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1790423472101,
+      "tag": "0006_logos_and_certifications",
+      "breakpoints": true
     }
   ]
 }

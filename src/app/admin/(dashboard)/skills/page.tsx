@@ -1,24 +1,35 @@
 import type { Metadata } from "next";
 import { createSkillGroup, deleteSkillGroup, updateSkillGroup } from "@/app/admin/actions/skills";
-import { ActionForm, DeleteButton, Input, Select, SubmitButton, Textarea } from "@/components/admin/forms";
+import { ActionForm, DeleteButton, Input, Select, SubmitButton } from "@/components/admin/forms";
+import { SkillItemsField, type SkillItemDraft } from "@/components/admin/skill-items-field";
 import { PageHeader, Panel } from "@/components/admin/ui";
 import { SKILL_ICONS } from "@/components/icons";
-import type { SkillGroup } from "@/db/schema";
+import { normalizeSkillItems, type SkillGroup } from "@/db/schema";
+import { guessIconRef, resolveIconRef } from "@/lib/tech-icons";
 import { getSkillGroups } from "@/lib/data";
 
 export const metadata: Metadata = { title: "Skills" };
 
 const iconOptions = Object.entries(SKILL_ICONS).map(([value, { label }]) => ({ value, label }));
 
+function drafts(group?: SkillGroup): SkillItemDraft[] {
+  return normalizeSkillItems(group?.items ?? []).map((item) => ({
+    name: item.name,
+    icon: item.icon ?? "",
+    preview: item.icon && item.icon !== "none" ? resolveIconRef(item.icon, item.name) : null,
+    auto: resolveIconRef(guessIconRef(item.name), item.name),
+  }));
+}
+
 function Fields({ group }: { group?: SkillGroup }) {
   return (
     <>
       <div className="grid gap-5 sm:grid-cols-[1fr_200px_120px]">
         <Input label="Title" name="title" defaultValue={group?.title} required />
-        <Select label="Icon" name="icon" options={iconOptions} defaultValue={group?.icon ?? "code"} />
+        <Select label="Group icon" name="icon" options={iconOptions} defaultValue={group?.icon ?? "code"} />
         <Input label="Order" name="sortOrder" type="number" defaultValue={group?.sortOrder ?? 0} />
       </div>
-      <Textarea label="Skills" name="items" defaultValue={group?.items.join("\n")} rows={5} hint="One skill per line." />
+      <SkillItemsField defaultValue={drafts(group)} />
     </>
   );
 }
@@ -27,7 +38,7 @@ export default async function SkillsPage() {
   const groups = await getSkillGroups();
   return (
     <>
-      <PageHeader title="Skills" description="Groups shown as cards in the Technical Skills section, lowest order first." />
+      <PageHeader title="Skills" description="Groups shown in the Technical skills section, lowest order first. Each skill can show a logo." />
       {groups.map((group) => (
         <Panel key={group.id} title={group.title}>
           <ActionForm action={updateSkillGroup.bind(null, group.id)}>

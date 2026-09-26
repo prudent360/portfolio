@@ -2,7 +2,7 @@ import "server-only";
 import { and, asc, desc, eq } from "drizzle-orm";
 import { cache } from "react";
 import { getDb } from "@/db";
-import { education, experiences, posts, projects, settings, skillGroups, type Settings } from "@/db/schema";
+import { certifications, education, experiences, posts, projects, settings, skillGroups, type Settings } from "@/db/schema";
 
 const EMPTY_SETTINGS: Settings = {
   id: 1, firstName: "", lastName: "", brand: "", role: "", location: "", eyebrow: "", headline: "",
@@ -67,6 +67,13 @@ export async function getEducation() {
   // Newest first; entries without years go last, the manual order breaks ties.
   const year = (row: (typeof rows)[number]) => row.endYear || row.startYear || "";
   return rows.sort((a, b) => (year(a) ? 0 : 1) - (year(b) ? 0 : 1) || year(b).localeCompare(year(a)) || a.sortOrder - b.sortOrder || a.id - b.id);
+}
+
+/** Newest first by issue date; undated last, the manual order breaks ties. */
+export async function getCertifications() {
+  const db = await getDb();
+  const rows = await db.select().from(certifications);
+  return rows.sort((a, b) => (a.issueDate ? 0 : 1) - (b.issueDate ? 0 : 1) || (b.issueDate ?? "").localeCompare(a.issueDate ?? "") || a.sortOrder - b.sortOrder || a.id - b.id);
 }
 
 export async function getPublishedPosts(limit?: number) {

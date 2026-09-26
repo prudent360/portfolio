@@ -1,14 +1,17 @@
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowUpRight, DownloadIcon, SkillIcon, WARM_ICONS, type SkillIconKey } from "@/components/icons";
+import { ArrowUpRight, DownloadIcon, ExternalIcon, SkillIcon, WARM_ICONS, type SkillIconKey } from "@/components/icons";
 import { CornerShapes, PipelineDiagram } from "@/components/site/illustrations";
 import { PostCard } from "@/components/site/post-card";
 import { ProjectsGrid, type PublicProject } from "@/components/site/projects-grid";
-import type { Project } from "@/db/schema";
+import { normalizeSkillItems, type Project } from "@/db/schema";
+import { TechIcon } from "@/components/tech-icon";
+import { iconForSkill } from "@/lib/tech-icons";
 import { embedProvider } from "@/lib/embed";
 import { hasProjectPage } from "@/lib/projects";
 import { SectionHeading } from "@/components/site/section-heading";
-import { getEducation, getExperiences, getProjects, getPublishedPosts, getSettings, getSkillGroups } from "@/lib/data";
+import { getCertifications, getEducation, getExperiences, getProjects, getPublishedPosts, getSettings, getSkillGroups } from "@/lib/data";
+import { OrgLogo } from "@/components/site/org-logo";
 import { absoluteUrl, jsonLd } from "@/lib/site";
 import { formatMonth, formatRange, fullName } from "@/lib/utils";
 
@@ -23,13 +26,14 @@ function toPublicProject(p: Project): PublicProject {
 }
 
 export default async function HomePage() {
-  const [settings, skills, projects, experiences, education, posts] = await Promise.all([
+  const [settings, skills, projects, experiences, education, posts, certs] = await Promise.all([
     getSettings(),
     getSkillGroups(),
     getProjects({ publishedOnly: true }),
     getExperiences(),
     getEducation(),
     getPublishedPosts(3),
+    getCertifications(),
   ]);
   const name = fullName(settings.firstName, settings.lastName);
   const initials = [settings.firstName, settings.lastName].map((n) => n.charAt(0)).join("").toUpperCase();
@@ -54,7 +58,10 @@ export default async function HomePage() {
         sameAs: [settings.linkedinUrl, settings.githubUrl].filter(Boolean),
         worksFor: currentJob ? { "@type": "Organization", name: currentJob.company } : undefined,
         alumniOf: education.map((e) => e.institution).filter(Boolean).map((school) => ({ "@type": "CollegeOrUniversity", name: school })),
-        knowsAbout: skills.flatMap((group) => group.items),
+        hasCredential: certs.length
+          ? certs.map((cert) => ({ "@type": "EducationalOccupationalCredential", name: cert.name, credentialCategory: "certification", recognizedBy: cert.issuer ? { "@type": "Organization", name: cert.issuer } : undefined, url: cert.credentialUrl ?? undefined }))
+          : undefined,
+        knowsAbout: skills.flatMap((group) => normalizeSkillItems(group.items).map((item) => item.name)),
       },
       { "@type": "WebSite", "@id": absoluteUrl("/#website"), url: absoluteUrl("/"), name, author: { "@id": absoluteUrl("/#person") } },
     ],
@@ -164,7 +171,7 @@ export default async function HomePage() {
       </section>
 
       {/* Experience & education, laid out like a CV */}
-      {(experiences.length > 0 || education.length > 0) && (
+      {(experiences.length > 0 || education.length > 0 || certs.length > 0) && (
         <section id="experience" className="border-t border-line">
           <div className="mx-auto flex max-w-[1200px] flex-col gap-14 px-5 py-20 sm:px-8 md:py-24">
             {experiences.length > 0 && (
@@ -176,7 +183,9 @@ export default async function HomePage() {
                     const current = Boolean(job.startDate && !job.endDate);
                     const achievements = job.description.split("\n").map((line) => line.replace(/^[\s•\-*]+/, "").trim()).filter(Boolean);
                     return (
-                      <li key={job.id} className="flex flex-col gap-1.5 py-6">
+                      <li key={job.id} className="flex gap-4 py-6 sm:gap-5">
+                        <OrgLogo src={job.logoUrl} name={job.company} />
+                        <div className="flex min-w-0 flex-col gap-1.5">
                         <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
                           <h3 className="font-display text-xl font-semibold leading-snug text-ink">{job.role}</h3>
                           {current && <span className="rounded-full bg-emerald-50 px-2 py-0.5 font-mono text-[11px] uppercase tracking-wider text-emerald-800">Current</span>}
@@ -197,6 +206,7 @@ export default async function HomePage() {
                             ))}
                           </ul>
                         )}
+                        </div>
                       </li>
                     );
                   })}
@@ -211,7 +221,9 @@ export default async function HomePage() {
                   {education.map((item) => {
                     const range = item.startYear && item.endYear ? `${item.startYear} – ${item.endYear}` : item.startYear || item.endYear || "";
                     return (
-                      <li key={item.id} className="flex flex-col gap-1.5 py-6">
+                      <li key={item.id} className="flex gap-4 py-6 sm:gap-5">
+                        <OrgLogo src={item.logoUrl} name={item.institution || item.degree} />
+                        <div className="flex min-w-0 flex-col gap-1.5">
                         <h3 className="font-display text-xl font-semibold leading-snug text-ink">{item.degree}</h3>
                         {(item.institution || range) && (
                           <p className="flex flex-wrap items-center gap-x-2 text-[15px]">
@@ -220,6 +232,41 @@ export default async function HomePage() {
                             {range && <span className="text-muted">{range}</span>}
                           </p>
                         )}
+                        </div>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+            )}
+
+            {certs.length > 0 && (
+              <div id="certifications" className="flex max-w-[880px] scroll-mt-24 flex-col gap-6">
+                <h2 className="font-display text-3xl font-semibold tracking-tight md:text-[36px]">Certifications</h2>
+                <ul className="flex flex-col divide-y divide-edge-strong border-t border-edge-strong">
+                  {certs.map((cert) => {
+                    const expired = Boolean(cert.expiryDate && cert.expiryDate < new Date().toISOString().slice(0, 7));
+                    return (
+                      <li key={cert.id} className="flex gap-4 py-6 sm:gap-5">
+                        <OrgLogo src={cert.logoUrl} name={cert.issuer || cert.name} />
+                        <div className="flex min-w-0 flex-col gap-1.5">
+                          <h3 className="font-display text-xl font-semibold leading-snug text-ink">{cert.name}</h3>
+                          <p className="flex flex-wrap items-center gap-x-2 text-[15px]">
+                            {cert.issuer && <span className="font-semibold text-accent">{cert.issuer}</span>}
+                            {cert.issueDate && <>{cert.issuer && <span className="text-[#A3A9B6]" aria-hidden="true">·</span>}<span className="text-muted">Issued {formatMonth(cert.issueDate)}</span></>}
+                            {cert.expiryDate && <><span className="text-[#A3A9B6]" aria-hidden="true">·</span><span className={expired ? "text-orange-ink" : "text-muted"}>{expired ? "Expired" : "Expires"} {formatMonth(cert.expiryDate)}</span></>}
+                          </p>
+                          {(cert.credentialId || cert.credentialUrl) && (
+                            <div className="mt-1 flex flex-wrap items-center gap-x-5 gap-y-1 text-sm">
+                              {cert.credentialId && <span className="font-mono text-muted">ID {cert.credentialId}</span>}
+                              {cert.credentialUrl && (
+                                <a href={cert.credentialUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 font-semibold text-accent hover:text-accent-dark">
+                                  View credential<span className="sr-only">: {cert.name}</span> <ExternalIcon className="size-3.5" />
+                                </a>
+                              )}
+                            </div>
+                          )}
+                        </div>
                       </li>
                     );
                   })}
@@ -249,9 +296,15 @@ export default async function HomePage() {
                       <h3 className="font-display text-lg font-semibold leading-snug text-ink sm:pt-2">{group.title}</h3>
                     </div>
                     <ul className="flex flex-wrap content-start gap-2 sm:pt-1" aria-label={group.title}>
-                      {group.items.map((item) => (
-                        <li key={item} className="rounded-full border border-edge bg-panel px-3.5 py-1.5 text-[15px] text-body">{item}</li>
-                      ))}
+                      {normalizeSkillItems(group.items).map((item) => {
+                        const icon = iconForSkill(item.name, item.icon);
+                        return (
+                          <li key={item.name} className="inline-flex items-center gap-2 rounded-full border border-edge bg-panel px-3.5 py-1.5 text-[15px] text-body">
+                            {icon && <TechIcon icon={icon} className="size-4" />}
+                            {item.name}
+                          </li>
+                        );
+                      })}
                     </ul>
                   </li>
                 );

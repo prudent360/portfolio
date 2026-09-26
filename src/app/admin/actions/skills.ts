@@ -4,10 +4,10 @@ import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { getDb } from "@/db";
-import { skillGroups } from "@/db/schema";
+import { skillGroups, type SkillItem } from "@/db/schema";
 import { SKILL_ICONS } from "@/components/icons";
 import { requireAdmin } from "@/lib/auth";
-import { parseList } from "@/lib/utils";
+import { resolveIconRef } from "@/lib/tech-icons";
 import { firstError, formValues, required, sortValue, type FormState } from "@/lib/validation";
 
 const schema = z.object({
@@ -19,8 +19,17 @@ const schema = z.object({
 function parse(formData: FormData) {
   const parsed = schema.safeParse(formValues(formData));
   if (!parsed.success) return { error: firstError(parsed.error) } as const;
-  const items = parseList(formData.get("items"), /\n/).slice(0, 30);
-  return { data: { ...parsed.data, items } } as const;
+  const names = formData.getAll("itemName").map((v) => String(v).trim().slice(0, 60));
+  const icons = formData.getAll("itemIcon").map((v) => String(v).trim());
+  const items: SkillItem[] = [];
+  names.forEach((name, i) => {
+    if (!name) return;
+    const icon = icons[i] ?? "";
+    // Keep only references the site can render: "none", a known icon, or an uploaded image.
+    const valid = icon === "none" || (icon !== "" && resolveIconRef(icon) !== null);
+    items.push(valid ? { name, icon } : { name });
+  });
+  return { data: { ...parsed.data, items: items.slice(0, 30) } } as const;
 }
 
 export async function createSkillGroup(_state: FormState, formData: FormData): Promise<FormState> {

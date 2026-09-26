@@ -1,17 +1,18 @@
 import Link from "next/link";
 import { Panel } from "@/components/admin/ui";
-import { getAllPosts, getEducation, getExperiences, getProjects, getSettings, getSkillGroups } from "@/lib/data";
+import { normalizeSkillItems } from "@/db/schema";
+import { getAllPosts, getCertifications, getEducation, getExperiences, getProjects, getSettings, getSkillGroups } from "@/lib/data";
 import { formatDate } from "@/lib/utils";
 
 export default async function DashboardPage() {
-  const [settings, skills, projects, experiences, education, posts] = await Promise.all([
-    getSettings(), getSkillGroups(), getProjects({ publishedOnly: false }), getExperiences(), getEducation(), getAllPosts(),
+  const [settings, skills, projects, experiences, education, posts, certs] = await Promise.all([
+    getSettings(), getSkillGroups(), getProjects({ publishedOnly: false }), getExperiences(), getEducation(), getAllPosts(), getCertifications(),
   ]);
 
   const stats = [
     { label: "Projects", value: projects.length, detail: `${projects.filter((p) => p.published).length} visible`, href: "/admin/projects" },
     { label: "Blog posts", value: posts.length, detail: `${posts.filter((p) => p.published).length} published`, href: "/admin/posts" },
-    { label: "Skill groups", value: skills.length, detail: `${skills.reduce((n, g) => n + g.items.length, 0)} skills`, href: "/admin/skills" },
+    { label: "Skill groups", value: skills.length, detail: `${skills.reduce((n, g) => n + normalizeSkillItems(g.items).length, 0)} skills`, href: "/admin/skills" },
     { label: "Experience", value: experiences.length, detail: `${education.length} education`, href: "/admin/experience" },
   ];
 
@@ -25,6 +26,8 @@ export default async function DashboardPage() {
     !settings.resumeUrl && "Upload your CV",
     !projects.some((p) => p.body.trim()) && "Write a case study for your strongest project",
     !projects.some((p) => p.featured) && "Choose which projects to feature (the first two are shown until you do)",
+    certs.length === 0 && "Add your certifications, with links to verify them",
+    experiences.some((e) => !e.logoUrl) && "Upload logos for the companies in your experience",
     experiences.some((e) => !e.startDate) && "Add start dates to your experience",
     education.some((e) => !e.institution || (!e.startYear && !e.endYear)) && "Complete your education details",
     projects.some((p) => !p.liveUrl && !p.githubUrl) && "Add demo or GitHub links to your projects",

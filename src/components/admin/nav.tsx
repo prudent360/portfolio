@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { FolderIcon, HomeIcon, KeyIcon, LayersIcon, PenIcon, UserIcon, BriefcaseIcon } from "@/components/icons";
+import { AwardIcon, FolderIcon, HomeIcon, KeyIcon, LayersIcon, PenIcon, UserIcon, BriefcaseIcon } from "@/components/icons";
 
 const ITEMS = [
   { href: "/admin", label: "Dashboard", icon: HomeIcon, exact: true },
@@ -10,6 +10,7 @@ const ITEMS = [
   { href: "/admin/skills", label: "Skills", icon: LayersIcon },
   { href: "/admin/projects", label: "Projects", icon: FolderIcon },
   { href: "/admin/experience", label: "Experience", icon: BriefcaseIcon },
+  { href: "/admin/certifications", label: "Certifications", icon: AwardIcon },
   { href: "/admin/posts", label: "Blog posts", icon: PenIcon },
   { href: "/admin/account", label: "Account", icon: KeyIcon },
 ];
