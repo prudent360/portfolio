@@ -1,4 +1,4 @@
-import { mkdirSync } from "node:fs";
+import { mkdirSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { drizzle as drizzlePg, type NodePgDatabase } from "drizzle-orm/node-postgres";
 import * as schema from "./schema";
@@ -33,6 +33,22 @@ export async function createDb(): Promise<Db> {
   await migrate(db, { migrationsFolder: MIGRATIONS_FOLDER });
   // Both drivers expose the same query builder API for this schema.
   return db as unknown as Db;
+}
+
+/** Number of migrations in drizzle/, used to notice new ones during local development. */
+export function migrationCount(): number {
+  try {
+    const journal = JSON.parse(readFileSync(path.join(MIGRATIONS_FOLDER, "meta", "_journal.json"), "utf8")) as { entries?: unknown[] };
+    return journal.entries?.length ?? 0;
+  } catch {
+    return 0;
+  }
+}
+
+/** Applies pending migrations to an already-open local PGlite database. */
+export async function migrateLocal(db: Db): Promise<void> {
+  const { migrate } = await import("drizzle-orm/pglite/migrator");
+  await migrate(db as unknown as Parameters<typeof migrate>[0], { migrationsFolder: MIGRATIONS_FOLDER });
 }
 
 /** Runs pending migrations against whichever database is configured. */
